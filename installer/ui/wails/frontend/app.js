@@ -1,4 +1,4 @@
-// Go Installer Frontend Application
+// Go SetupKit Frontend Application
 
 let currentScreen = 0;
 const screens = [
@@ -12,7 +12,7 @@ const screens = [
 
 // Initialize app
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('Go Installer GUI initialized');
+    console.log('Go SetupKit GUI initialized');
     showScreen(0);
 });
 

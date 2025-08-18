@@ -111,11 +111,11 @@ After installing with `-service` flag:
 ### Windows
 ```cmd
 # Check service status
-sc query goinstaller-example
+sc query gosetupkit-example
 
 # Start/stop service
-sc start goinstaller-example
-sc stop goinstaller-example
+sc start gosetupkit-example
+sc stop gosetupkit-example
 
 # View in Services Manager
 services.msc
@@ -124,27 +124,27 @@ services.msc
 ### Linux
 ```bash
 # Check service status
-systemctl status goinstaller-example
+systemctl status gosetupkit-example
 
 # Start/stop service
-sudo systemctl start goinstaller-example
-sudo systemctl stop goinstaller-example
+sudo systemctl start gosetupkit-example
+sudo systemctl stop gosetupkit-example
 
 # View logs
-journalctl -u goinstaller-example -f
+journalctl -u gosetupkit-example -f
 ```
 
 ### macOS
 ```bash
 # Check service status
-launchctl list | grep goinstaller
+launchctl list | grep gosetupkit
 
 # Start/stop service
-sudo launchctl start com.goinstaller.goinstaller-example
-sudo launchctl stop com.goinstaller.goinstaller-example
+sudo launchctl start com.gosetupkit.gosetupkit-example
+sudo launchctl stop com.gosetupkit.gosetupkit-example
 
 # View logs
-tail -f /var/log/goinstaller-example.log
+tail -f /var/log/gosetupkit-example.log
 ```
 
 ## Testing PATH Management
