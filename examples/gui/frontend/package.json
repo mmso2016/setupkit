@@ -1,0 +1,11 @@
+{
+  "name": "Setup-Kit-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "xcopy /E /I /Y src dist 2>nul || (robocopy src dist /E /NFL /NDL /NJH /NJS /nc /ns /np & exit 0)",
+    "dev": "xcopy /E /I /Y src dist 2>nul || (robocopy src dist /E /NFL /NDL /NJH /NJS /nc /ns /np & exit 0)"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

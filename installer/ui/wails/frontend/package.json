@@ -1,0 +1,14 @@
+{
+  "name": "Setup-Kit-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Go Installer GUI",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"No tests\""
+  },
+  "keywords": ["installer", "wails", "go"],
+  "author": "Setup-Kit",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}

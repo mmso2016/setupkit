@@ -1,0 +1,66 @@
+# Setup-Kit Response File
+# This file automates the installation process
+# Format: key=value or JSON
+
+# License Agreement
+accept_license=true
+
+# Installation Type
+# Options: typical, custom, minimal, complete, upgrade, repair
+install_type=typical
+
+# Installation Directory
+# Windows: C:\Program Files\MyApp
+# Linux: /opt/myapp
+# macOS: /Applications/MyApp
+install_dir=C:\Program Files\MyApp
+
+# Components to Install
+# Comma-separated list of component IDs
+components=core,docs,examples
+
+# Configuration Options
+desktop_shortcut=true
+start_menu=true
+add_to_path=true
+file_associations=true
+
+# Service Configuration (if applicable)
+install_service=false
+service_name=myapp-service
+service_auto_start=true
+service_user=LocalSystem
+
+# Database Configuration (if applicable)
+database_type=sqlite
+database_host=localhost
+database_port=5432
+database_name=myapp
+database_user=admin
+
+# Network Configuration
+api_port=8080
+enable_ssl=false
+
+# Logging
+enable_logging=true
+log_level=info
+log_directory=logs
+
+# Advanced Options
+create_backup=true
+verify_installation=true
+cleanup_temp_files=true
+
+# Confirmation
+confirm_install=true
+
+# Post-Installation Actions
+launch_after_install=false
+open_documentation=false
+register_product=false
+
+# Uninstall Options
+remove_user_data=false
+remove_settings=false
+create_restore_point=true

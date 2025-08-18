@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Installer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="installer-container">
+            <header class="installer-header">
+                <h1>Go Installer</h1>
+                <p class="version">Version 1.0.0</p>
+            </header>
+
+            <div class="installer-content">
+                <!-- Welcome Screen -->
+                <div id="welcome-screen" class="screen active">
+                    <h2>Welcome to the Installation Wizard</h2>
+                    <p>This wizard will guide you through the installation process.</p>
+                    <button class="btn btn-primary" onclick="nextScreen()">Next</button>
+                </div>
+
+                <!-- License Screen -->
+                <div id="license-screen" class="screen">
+                    <h2>License Agreement</h2>
+                    <div class="license-text">
+                        <p>Please read and accept the license agreement to continue.</p>
+                        <textarea readonly>MIT License...</textarea>
+                    </div>
+                    <label>
+                        <input type="checkbox" id="accept-license">
+                        I accept the license agreement
+                    </label>
+                    <div class="button-group">
+                        <button class="btn" onclick="previousScreen()">Back</button>
+                        <button class="btn btn-primary" onclick="nextScreen()">Next</button>
+                    </div>
+                </div>
+
+                <!-- Components Screen -->
+                <div id="components-screen" class="screen">
+                    <h2>Select Components</h2>
+                    <div class="component-list">
+                        <label class="component">
+                            <input type="checkbox" checked disabled>
+                            <span>Core Files (Required)</span>
+                        </label>
+                        <label class="component">
+                            <input type="checkbox" checked>
+                            <span>Documentation</span>
+                        </label>
+                        <label class="component">
+                            <input type="checkbox">
+                            <span>Examples</span>
+                        </label>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn" onclick="previousScreen()">Back</button>
+                        <button class="btn btn-primary" onclick="nextScreen()">Next</button>
+                    </div>
+                </div>
+
+                <!-- Installation Path Screen -->
+                <div id="path-screen" class="screen">
+                    <h2>Choose Installation Directory</h2>
+                    <div class="path-selector">
+                        <input type="text" id="install-path" value="C:\Program Files\MyApp" readonly>
+                        <button class="btn" onclick="browsePath()">Browse...</button>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn" onclick="previousScreen()">Back</button>
+                        <button class="btn btn-primary" onclick="startInstallation()">Install</button>
+                    </div>
+                </div>
+
+                <!-- Progress Screen -->
+                <div id="progress-screen" class="screen">
+                    <h2>Installing...</h2>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p id="progress-status">Preparing installation...</p>
+                </div>
+
+                <!-- Complete Screen -->
+                <div id="complete-screen" class="screen">
+                    <h2>Installation Complete!</h2>
+                    <p>The application has been successfully installed.</p>
+                    <label>
+                        <input type="checkbox" checked>
+                        Launch application
+                    </label>
+                    <button class="btn btn-primary" onclick="finish()">Finish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

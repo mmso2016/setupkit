@@ -1,0 +1,38 @@
+# Minimal installer configuration
+# Clean and simple, skips optional screens
+
+ui:
+  theme: "minimal-light"
+  title: "Quick Install"
+
+screens:
+  welcome:
+    enabled: true
+    title: "Quick Install"
+    message: "This will quickly install the application with default settings."
+    position: 1
+
+  license:
+    enabled: false  # Skip license screen
+
+  components:
+    enabled: false  # Skip component selection, install all
+
+  directory:
+    enabled: true
+    title: "Install Location"
+    message: "Choose installation directory:"
+    position: 2
+
+  installation:
+    enabled: true
+    title: "Installing..."
+    position: 3
+
+  finish:
+    enabled: true
+    title: "Done!"
+    message: "Installation complete."
+    position: 4
+    properties:
+      show_launch_option: true

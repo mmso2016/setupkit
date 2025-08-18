@@ -1,0 +1,55 @@
+# Medical software installer configuration
+# Healthcare-focused theme and messaging
+
+ui:
+  theme: "medical-green"
+  title: "Medical Suite Installer"
+
+branding:
+  primary_color: "#059669"
+  secondary_color: "#10b981"
+  logo: "assets/medical-logo.png"
+  font_family: "'Inter', sans-serif"
+  company_name: "HealthCare Solutions"
+
+screens:
+  welcome:
+    enabled: true
+    title: "Welcome to Medical Suite"
+    message: "This installer will set up the Medical Suite software for healthcare professionals."
+    position: 1
+
+  license:
+    enabled: true
+    title: "HIPAA Compliance & License"
+    message: "Please review the software license and HIPAA compliance information."
+    position: 2
+
+  components:
+    enabled: true
+    title: "Medical Modules"
+    message: "Select the medical modules to install based on your practice needs."
+    position: 3
+
+  directory:
+    enabled: true
+    title: "Secure Installation Directory"
+    message: "Choose a secure location for medical data storage compliance."
+    position: 4
+    properties:
+      default_path: "C:\\Program Files\\MedicalSuite"
+
+  installation:
+    enabled: true
+    title: "Installing Medical Suite"
+    message: "Installing medical software components and configuring security..."
+    position: 5
+
+  finish:
+    enabled: true
+    title: "Medical Suite Ready"
+    message: "Your medical software is installed and ready for secure patient data management."
+    position: 6
+    properties:
+      show_launch_option: true
+      show_readme_option: true

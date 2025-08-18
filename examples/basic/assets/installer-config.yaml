@@ -1,0 +1,46 @@
+# Basic example UI configuration
+ui:
+  theme: "default"
+  title: "MyApp Installer"
+
+branding:
+  company_name: "My Company"
+
+screens:
+  welcome:
+    enabled: true
+    title: "Welcome to MyApp"
+    message: "This installer will guide you through the installation of MyApp."
+    position: 1
+
+  license:
+    enabled: true
+    title: "License Agreement"
+    message: "Please read and accept the MIT license."
+    position: 2
+
+  components:
+    enabled: true
+    title: "Select Components"
+    message: "Choose which components to install."
+    position: 3
+
+  directory:
+    enabled: true
+    title: "Installation Directory"
+    message: "Choose where to install MyApp."
+    position: 4
+
+  installation:
+    enabled: true
+    title: "Installing MyApp"
+    message: "Please wait while MyApp is being installed..."
+    position: 5
+
+  finish:
+    enabled: true
+    title: "Installation Complete"
+    message: "MyApp has been successfully installed!"
+    position: 6
+    properties:
+      show_launch_option: true

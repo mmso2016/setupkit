@@ -1,0 +1,32 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "setupkit-gui",
+  "outputfilename": "installer-gui",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "SetupKit",
+    "email": "installer@example.com"
+  },
+  "info": {
+    "companyName": "SetupKit",
+    "productName": "SetupKit Installer",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright 2024",
+    "comments": "Professional SetupKit Installer Framework"
+  },
+  "build": {
+    "appID": "com.setupkit.app",
+    "windows": {
+      "fileAssociations": [],
+      "webviewIsTransparent": false,
+      "windowIsTranslucent": false
+    },
+    "linux": {
+      "icon": "",
+      "desktopTemplate": ""
+    }
+  }
+}

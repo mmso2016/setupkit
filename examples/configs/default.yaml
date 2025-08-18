@@ -1,0 +1,60 @@
+# Default installer configuration
+# This demonstrates all available configuration options
+
+ui:
+  theme: "default"
+  title: "My Application Installer"
+  logo: "assets/logo.png"
+  auto_theme: false
+
+branding:
+  primary_color: "#2563eb"
+  secondary_color: "#64748b"
+  logo: "assets/company-logo.png"
+  font_family: "'Inter', sans-serif"
+  company_name: "My Company"
+
+screens:
+  welcome:
+    enabled: true
+    title: "Welcome to My Application"
+    message: "This installer will guide you through the installation process."
+    position: 1
+
+  license:
+    enabled: true
+    title: "License Agreement"
+    message: "Please read and accept the license agreement to continue."
+    position: 2
+
+  components:
+    enabled: true
+    title: "Select Components"
+    message: "Choose which components you want to install."
+    position: 3
+    properties:
+      allow_custom_selection: true
+
+  directory:
+    enabled: true
+    title: "Installation Directory"
+    message: "Choose where to install the application."
+    position: 4
+    properties:
+      default_path: "C:\\Program Files\\MyApp"
+      allow_custom_path: true
+
+  installation:
+    enabled: true
+    title: "Installing"
+    message: "Please wait while the application is being installed..."
+    position: 5
+
+  finish:
+    enabled: true
+    title: "Installation Complete"
+    message: "The application has been successfully installed."
+    position: 6
+    properties:
+      show_launch_option: true
+      show_readme_option: false
