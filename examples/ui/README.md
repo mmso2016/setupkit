@@ -1,338 +1,156 @@
-# UI System Example
+# SetupKit UI - Wails Installer Application
 
-This example demonstrates the complete UI system of the Setup-Kit library with multiple interface options.
+This is a full-featured Wails-based installer GUI for the SetupKit project.
 
 ## Features
 
-The UI system supports multiple modes:
-
-- **CLI Mode**: Command-line interface with interactive prompts
-- **GUI Mode**: Native GUI using Wails framework
-- **Web Mode**: Browser-based interface
-- **Silent Mode**: Unattended installation with response files
-- **Auto Mode**: Automatically selects the best available UI
+- Modern, responsive GUI with step-by-step wizard
+- Multiple theme support (Default, Corporate Blue, Medical Green, Tech Dark, Minimal Light)
+- Component selection with size calculation
+- Installation progress tracking
+- Browse for installation directory
+- License agreement display
+- Installation summary
 
 ## Building
 
-```bash
-# Build the example
-go build -o ui-example
+### Prerequisites
 
-# Build with GUI support (requires Wails)
+1. Install Wails:
+```bash
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
+```
+
+2. Install Node.js (for frontend build)
+
+### Build Commands
+
+#### Build the Wails GUI:
+```bash
+# From this directory (examples/ui)
 wails build
+
+# The executable will be in build/bin/
 ```
 
-## Usage
+#### Development Mode:
+```bash
+# Run in development mode with hot reload
+wails dev
+```
 
-### CLI Mode
+#### Build for specific platform:
+```bash
+# Windows
+wails build -platform windows/amd64
 
-Interactive command-line installation:
+# macOS
+wails build -platform darwin/universal
+
+# Linux
+wails build -platform linux/amd64
+```
+
+### Command Line Options
+
+The installer supports various command-line flags:
 
 ```bash
-./ui-example -mode cli
+# Run with specific theme
+./installer-ui -theme corporate-blue
+
+# Specify application details
+./installer-ui -title "My App" -version "2.0.0" -publisher "My Company"
+
+# List available themes
+./installer-ui -list-themes
+
+# Generate configuration file
+./installer-ui -generate-config myconfig.yaml
+
+# Use configuration file
+./installer-ui -config myconfig.yaml
+
+# CLI mode fallback (when not using GUI)
+./installer-ui -mode cli
 ```
 
-Features:
-- Step-by-step wizard
-- Progress bars with colors
-- Component selection
-- Directory browsing
-- Input validation
+## Project Structure
 
-### Web Mode
-
-Browser-based installation:
-
-```bash
-./ui-example -mode web -port 8080
+```
+examples/ui/
+├── main.go              # Main Wails application
+├── wails.json           # Wails configuration
+├── frontend/            # Frontend files
+│   ├── package.json     # Frontend build configuration
+│   ├── src/             # Source files
+│   │   ├── index.html   # Main HTML
+│   │   ├── style.css    # Styles with theme support
+│   │   └── app.js       # Frontend logic
+│   └── dist/            # Built frontend files
+└── build/               # Build output (created by Wails)
+    └── bin/             # Compiled executables
 ```
 
-Then open http://localhost:8080 in your browser.
+## Themes
 
-Features:
-- Modern responsive design
-- Real-time progress updates
-- WebSocket communication
-- Mobile-friendly interface
+The installer includes 5 built-in themes:
 
-### Silent Mode
+1. **Default** - Purple gradient theme
+2. **Corporate Blue** - Professional blue theme
+3. **Medical Green** - Healthcare-oriented green theme
+4. **Tech Dark** - Dark theme for technical applications
+5. **Minimal Light** - Clean, minimal light theme
 
-Unattended installation using response file:
+Themes can be changed at runtime from the welcome screen or specified via command line.
 
-```bash
-# Generate example response file
-./ui-example -mode silent -response example.rsp -generate
+## Development
 
-# Run silent installation
-./ui-example -mode silent -response install.rsp -log install.log
-```
+### Modifying the Frontend
 
-Example response file (`install.rsp`):
-```
-accept_license=true
-install_type=typical
-install_dir=C:\Program Files\MyApp
-components=core,docs,examples
-desktop_shortcut=true
-start_menu=true
-add_path=false
-confirm_install=true
-```
+1. Edit files in `frontend/src/`
+2. Run `npm run build` in the frontend directory to copy to dist
+3. Run `wails build` to rebuild the application
 
-### GUI Mode
+### Adding New Features
 
-Native desktop application (requires Wails):
+The main.go file contains the backend logic with these key methods:
 
-```bash
-./ui-example -mode gui
-```
-
-Features:
-- Native look and feel
-- File dialogs
-- System notifications
-- Smooth animations
-- Dark mode support
-
-### Demo Mode
-
-Run a demonstration of all UI features:
-
-```bash
-./ui-example -demo
-
-# With specific mode
-./ui-example -demo -mode web
-```
-
-## Command Line Options
-
-| Flag | Description | Default |
-|------|-------------|---------|
-| `-mode` | UI mode (auto, cli, gui, web, silent) | auto |
-| `-title` | Application title | "My Application" |
-| `-response` | Response file for silent mode | "" |
-| `-log` | Log file path | "" |
-| `-port` | Port for web UI | 8080 |
-| `-v` | Verbose output | false |
-| `-demo` | Run in demo mode | false |
-
-## UI Flow
-
-The standard installation flow:
-
-1. **Welcome Screen** - Introduction and overview
-2. **License Agreement** - Display and accept license
-3. **Installation Type** - Typical, Custom, Minimal, Complete
-4. **Component Selection** - Choose components to install
-5. **Installation Directory** - Select target directory
-6. **Configuration Options** - Additional settings
-7. **Summary & Confirmation** - Review selections
-8. **Installation Progress** - Real-time progress display
-9. **Completion** - Success or failure message
-
-## Customization
-
-### Themes
-
-The UI supports custom themes:
-
-```go
-config := &ui.Config{
-    Theme: ui.Theme{
-        Name:            "dark",
-        PrimaryColor:    "#1a202c",
-        SecondaryColor:  "#2d3748",
-        BackgroundColor: "#0f1419",
-        TextColor:       "#e2e8f0",
-        Dark:            true,
-    },
-}
-```
-
-### Custom Components
-
-Add your own components:
-
-```go
-components := []ui.Component{
-    {
-        ID:          "custom",
-        Name:        "Custom Component",
-        Description: "My custom component",
-        Size:        1024 * 1024,
-        Children: []ui.Component{
-            // Sub-components
-        },
-    },
-}
-```
-
-### Custom Options
-
-Define installation options:
-
-```go
-options := []ui.Option{
-    {
-        ID:   "database",
-        Name: "Database Type",
-        Type: ui.OptionTypeSelect,
-        Choices: []ui.Choice{
-            {Value: "sqlite", Label: "SQLite"},
-            {Value: "postgres", Label: "PostgreSQL"},
-            {Value: "mysql", Label: "MySQL"},
-        },
-        Default: "sqlite",
-    },
-}
-```
-
-## Response File Format
-
-Response files can be in two formats:
-
-### Key-Value Format
-```
-accept_license=true
-install_type=custom
-install_dir=/opt/myapp
-components=core,plugins,docs
-```
-
-### JSON Format
-```json
-{
-    "accept_license": true,
-    "install_type": "custom",
-    "install_dir": "/opt/myapp",
-    "components": ["core", "plugins", "docs"],
-    "options": {
-        "desktop_shortcut": true,
-        "add_path": true
-    }
-}
-```
-
-## Progress Reporting
-
-The UI system provides detailed progress information:
-
-```go
-progress := ui.Progress{
-    Percentage:    75.5,
-    CurrentAction: "Copying files",
-    CurrentFile:   "app.exe",
-    BytesCompleted: 75497472,
-    BytesTotal:     100000000,
-    TimeElapsed:   120,
-    TimeRemaining: 40,
-    Speed:         629145,
-}
-```
-
-## Error Handling
-
-All UI modes handle errors gracefully:
-
-```go
-if err := installer.ShowError(err); err != nil {
-    // Error dialog shown to user
-}
-```
-
-## Platform Differences
-
-### Windows
-- Uses Windows color console for CLI
-- Native file dialogs in GUI
-- Registry integration
-
-### Linux
-- ANSI colors in terminal
-- GTK dialogs in GUI
-- Desktop file creation
-
-### macOS
-- Terminal colors
-- Native Cocoa dialogs
-- App bundle support
-
-## Testing
-
-```bash
-# Test CLI mode
-go test -run TestCLIUI
-
-# Test Web mode
-go test -run TestWebUI
-
-# Test Silent mode
-go test -run TestSilentUI
-
-# Test all modes
-go test ./...
-```
+- `GetConfig()` - Returns configuration for the frontend
+- `BrowseFolder()` - Opens directory selection dialog
+- `SetSelectedComponents()` - Updates component selection
+- `SetInstallPath()` - Sets installation directory
+- `StartInstallation()` - Begins the installation process
+- `FinishInstallation()` - Completes installation and optionally launches the app
 
 ## Troubleshooting
 
-### CLI Mode Issues
+### Build Issues
 
-**Problem**: No colors in terminal
-**Solution**: Check if terminal supports ANSI colors
+If you encounter build issues:
 
-**Problem**: Input not working
-**Solution**: Ensure stdin is available (not redirected)
-
-### Web Mode Issues
-
-**Problem**: Port already in use
-**Solution**: Use different port with `-port` flag
-
-**Problem**: Browser doesn't open
-**Solution**: Manually navigate to http://localhost:8080
-
-### GUI Mode Issues
-
-**Problem**: GUI not available
-**Solution**: Install Wails and rebuild with GUI support
-
-**Problem**: Window doesn't appear
-**Solution**: Check display server (X11/Wayland on Linux)
-
-### Silent Mode Issues
-
-**Problem**: Installation fails silently
-**Solution**: Check log file specified with `-log`
-
-**Problem**: Response file not found
-**Solution**: Use absolute path or check working directory
-
-## Architecture
-
-```
-ui/
-├── ui.go           # Main interface and types
-├── ui_cli.go       # CLI implementation
-├── ui_web.go       # Web implementation  
-├── ui_gui.go       # GUI implementation (Wails)
-├── ui_silent.go    # Silent mode implementation
-└── web/            # Web assets
-    ├── index.html
-    ├── app.js
-    └── style.css
+1. Ensure Wails is properly installed:
+```bash
+wails doctor
 ```
 
-## Contributing
+2. Clear the build cache:
+```bash
+wails build -clean
+```
 
-To add a new UI mode:
+3. Ensure frontend files are in dist:
+```bash
+cd frontend
+npm run build
+```
 
-1. Implement the `UI` interface
-2. Add mode to `Mode` enum
-3. Update `CreateUI` factory function
-4. Add tests for new mode
+### Runtime Issues
+
+- If the GUI doesn't appear, check that you're running in GUI mode (default)
+- For debugging, run with verbose flag: `-v`
+- Check the console output for any error messages
 
 ## License
 
-MIT License - See LICENSE file in root directory
+MIT License - See the main project LICENSE file for details.

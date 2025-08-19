@@ -3,6 +3,8 @@ package ui
 
 import (
 	"fmt"
+	"os"
+	"runtime"
 
 	"github.com/mmso2016/setupkit/installer/core"
 )
@@ -46,9 +48,14 @@ func detectBestUI() (core.UI, error) {
 
 // hasDisplay checks if a display is available
 func hasDisplay() bool {
-	// This is a simplified check
-	// TODO: Implement proper display detection for each platform
-	return false // For now, default to CLI
+	// On Windows, we generally have a display if not running as a service
+	// On Unix systems, check for DISPLAY environment variable
+	// This is a simplified check - improve as needed
+	if runtime.GOOS == "windows" {
+		return true // Windows usually has display unless running as service
+	}
+	// Unix/Linux: check for DISPLAY or WAYLAND_DISPLAY
+	return os.Getenv("DISPLAY") != "" || os.Getenv("WAYLAND_DISPLAY") != ""
 }
 
 // createSilent creates a silent/headless UI

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mmso2016/setupkit/installer"
+	_ "github.com/mmso2016/setupkit/installer/ui" // Register UI factory
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -387,8 +388,8 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "Go Installer GUI",
-		Width:  750,
-		Height: 650,
+		Width:  800,
+		Height: 720,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Wizard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="installer-container">
+            <!-- Header -->
+            <div class="header">
+                <h1 id="appTitle">Application Setup</h1>
+                <div class="version" id="appVersion">Version 1.0.0</div>
+            </div>
+
+            <!-- Progress Steps - Stepper Component -->
+            <div class="steps" data-current-step="welcome">
+                <div class="step active" data-step="welcome">
+                    <div class="step-circle">
+                        <span>1</span>
+                    </div>
+                    <div class="step-label">Welcome</div>
+                </div>
+                <div class="step" data-step="license">
+                    <div class="step-circle">
+                        <span>2</span>
+                    </div>
+                    <div class="step-label">License</div>
+                </div>
+                <div class="step" data-step="components">
+                    <div class="step-circle">
+                        <span>3</span>
+                    </div>
+                    <div class="step-label">Components</div>
+                </div>
+                <div class="step" data-step="path">
+                    <div class="step-circle">
+                        <span>4</span>
+                    </div>
+                    <div class="step-label">Location</div>
+                </div>
+                <div class="step" data-step="install">
+                    <div class="step-circle">
+                        <span>5</span>
+                    </div>
+                    <div class="step-label">Install</div>
+                </div>
+                <div class="step" data-step="complete">
+                    <div class="step-circle">
+                        <span>6</span>
+                    </div>
+                    <div class="step-label">Complete</div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content">
+                <!-- Welcome Page -->
+                <div id="page-welcome" class="page active">
+                    <h2>Welcome to the Setup Wizard</h2>
+                    <p>This wizard will guide you through the installation process.</p>
+                    <div class="welcome-info">
+                        <p><strong>Publisher:</strong> <span id="publisher">Example Publisher</span></p>
+                        <p><strong>Website:</strong> <span id="website">https://example.com</span></p>
+                    </div>
+                    <div class="theme-selector">
+                        <label for="themeSelect">Theme:</label>
+                        <select id="themeSelect">
+                            <option value="default">Default</option>
+                            <option value="corporate-blue">Corporate Blue</option>
+                            <option value="medical-green">Medical Green</option>
+                            <option value="tech-dark">Tech Dark</option>
+                            <option value="minimal-light">Minimal Light</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- License Page -->
+                <div id="page-license" class="page">
+                    <h2>License Agreement</h2>
+                    <div class="license-accept">
+                        <label>
+                            <input type="checkbox" id="acceptLicense">
+                            I accept the terms of the license agreement
+                        </label>
+                    </div>
+                    <div class="license-box">
+                        <textarea id="licenseText" readonly>MIT License
+
+Copyright (c) 2024 Example Publisher
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Additional Terms and Conditions:
+
+1. Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the above copyright notice,
+   this list of conditions and the following disclaimer are included.
+
+2. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+3. The software is provided "as is", without warranty of any kind,
+   express or implied, including but not limited to the warranties of
+   merchantability, fitness for a particular purpose and noninfringement.</textarea>
+                    </div>
+                </div>
+
+                <!-- Components Page -->
+                <div id="page-components" class="page">
+                    <h2>Select Components</h2>
+                    <div class="components-list" id="componentsList">
+                        <div class="component-item">
+                            <div class="component-header">
+                                <div class="component-checkbox">
+                                    <input type="checkbox" id="comp-core" checked disabled>
+                                    <label for="comp-core" class="component-name">Core Application</label>
+                                </div>
+                                <span class="component-size">45 MB</span>
+                            </div>
+                            <div class="component-description">Main application files (required)</div>
+                        </div>
+                        <div class="component-item">
+                            <div class="component-header">
+                                <div class="component-checkbox">
+                                    <input type="checkbox" id="comp-docs" checked>
+                                    <label for="comp-docs" class="component-name">Documentation</label>
+                                </div>
+                                <span class="component-size">12 MB</span>
+                            </div>
+                            <div class="component-description">User manual and API documentation</div>
+                        </div>
+                        <div class="component-item">
+                            <div class="component-header">
+                                <div class="component-checkbox">
+                                    <input type="checkbox" id="comp-examples">
+                                    <label for="comp-examples" class="component-name">Examples</label>
+                                </div>
+                                <span class="component-size">8 MB</span>
+                            </div>
+                            <div class="component-description">Sample projects and templates</div>
+                        </div>
+                    </div>
+                    <div class="space-info">
+                        <p>Required space: <span id="requiredSpace">57 MB</span></p>
+                        <p>Available space: <span id="availableSpace">120 GB</span></p>
+                    </div>
+                </div>
+
+                <!-- Path Page -->
+                <div id="page-path" class="page">
+                    <h2>Installation Location</h2>
+                    <div class="path-selector">
+                        <input type="text" id="installPath" value="C:\Program Files\MyApp">
+                        <button id="browsePath">Browse...</button>
+                        <!-- Hidden file input for fallback -->
+                        <input type="file" id="folderInput" webkitdirectory directory multiple style="display: none;" />
+                    </div>
+                    <div class="path-suggestions">
+                        <label>Quick select:</label>
+                        <button class="path-quick-btn" onclick="document.getElementById('installPath').value='C:\\Program Files\\MyApp'">Program Files</button>
+                        <button class="path-quick-btn" onclick="document.getElementById('installPath').value='C:\\Users\\' + (window.username || 'User') + '\\AppData\\Local\\MyApp'">User AppData</button>
+                        <button class="path-quick-btn" onclick="document.getElementById('installPath').value='D:\\Programs\\MyApp'">D: Drive</button>
+                        <button class="path-quick-btn" onclick="document.getElementById('installPath').value='C:\\MyApp'">C: Root</button>
+                    </div>
+                    <div class="path-info">
+                        <p id="pathInfo">Select the folder where you want to install the application or type a custom path.</p>
+                    </div>
+                </div>
+
+                <!-- Install Page -->
+                <div id="page-install" class="page">
+                    <h2>Installing...</h2>
+                    <div class="progress-container">
+                        <div class="progress-text" id="progressText">Preparing installation...</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-percent" id="progressPercent">0%</div>
+                    </div>
+                    <div class="install-log" id="installLog">Initializing installation process...
+Checking system requirements...
+Preparing file system...</div>
+                </div>
+
+                <!-- Complete Page -->
+                <div id="page-complete" class="page">
+                    <h2>Installation Complete</h2>
+                    <div class="complete-message">
+                        <p style="font-size: 28px; margin-bottom: 20px;">✅</p>
+                        <p>The application has been successfully installed!</p>
+                        <div id="completeSummary">
+                            <ul style="list-style: none; padding: 0; margin-top: 20px;">
+                                <li style="padding: 8px 0; color: #155724; border-bottom: 1px solid rgba(0,0,0,0.05);">Installation path: C:\Program Files\MyApp</li>
+                                <li style="padding: 8px 0; color: #155724; border-bottom: 1px solid rgba(0,0,0,0.05);">Installed components: Core, Documentation</li>
+                                <li style="padding: 8px 0; color: #155724;">Total size: 57 MB</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="complete-options">
+                        <label>
+                            <input type="checkbox" id="launchApp" checked>
+                            Launch application
+                        </label>
+                        <label>
+                            <input type="checkbox" id="viewReadme">
+                            View README
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer with buttons -->
+            <div class="footer">
+                <button id="btnBack" disabled>Back</button>
+                <button id="btnNext">Next</button>
+                <button id="btnCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./wailsjs/runtime/runtime.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

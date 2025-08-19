@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/mmso2016/setupkit/installer/core"
+	_ "github.com/mmso2016/setupkit/installer/ui" // Register UI factory
 )
 
 func main() {

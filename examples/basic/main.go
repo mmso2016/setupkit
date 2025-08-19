@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/mmso2016/setupkit/installer"
+	_ "github.com/mmso2016/setupkit/installer/ui" // Register UI factory
 )
 
 //go:embed assets/*

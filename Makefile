@@ -40,13 +40,14 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  all          - Clean, test and build everything"
-	@echo "  build        - Build all examples"
+	@echo "  build        - Build all examples (non-Wails)"
+	@echo "  build-all    - Build everything including Wails GUIs"
 	@echo "  build-cli    - Build CLI installer"
-	@echo "  build-gui    - Build Wails GUI installer"
+	@echo "  build-gui    - Build Wails GUI installer (requires Wails)"
 	@echo "  build-console - Build console GUI"
 	@echo "  build-platform - Build platform example"
-	@echo "  build-ui     - Build UI example (default tags)"
-	@echo "  build-ui-wails - Build UI example with Wails"
+	@echo "  build-ui     - Build UI example (CLI mode)"
+	@echo "  build-ui-wails - Build UI example with Wails GUI (requires Wails)"
 	@echo "  build-ui-nogui - Build UI example without GUI"
 	@echo "  test         - Run all tests"
 	@echo "  test-verbose - Run tests with verbose output"
@@ -66,7 +67,18 @@ help:
 
 # Build targets
 .PHONY: build
-build: build-cli build-console build-platform build-ui build-ui-wails build-ui-nogui
+build: build-cli build-console build-platform build-ui build-ui-nogui
+ifeq ($(OS),Windows_NT)
+	@where wails >nul 2>&1 && $(MAKE) build-wails-targets || echo Skipping Wails targets (Wails not installed)
+else
+	@which wails > /dev/null 2>&1 && $(MAKE) build-wails-targets || echo "Skipping Wails targets (Wails not installed)"
+endif
+
+.PHONY: build-wails-targets
+build-wails-targets: build-gui build-ui-wails
+
+.PHONY: build-all
+build-all: build build-wails-targets
 
 .PHONY: build-cli
 build-cli:
@@ -88,15 +100,37 @@ build-platform:
 
 .PHONY: build-ui
 build-ui:
-	@echo "Building UI example..."
+	@echo "Building UI example (CLI mode)..."
 	@$(MKDIR) $(BIN_DIR)
-	go build $(GOFLAGS) $(LDFLAGS) -o $(BIN_DIR)$(PATH_SEP)installer-ui$(BINARY_EXT) $(EXAMPLES_DIR)/ui
+	go build $(GOFLAGS) $(LDFLAGS) -o $(BIN_DIR)$(PATH_SEP)installer-ui-cli$(BINARY_EXT) $(EXAMPLES_DIR)/ui
 
 .PHONY: build-ui-wails
-build-ui-wails:
-	@echo "Building UI example with Wails support..."
-	@$(MKDIR) $(BIN_DIR)
-	go build $(GOFLAGS) $(LDFLAGS) -tags wails -o $(BIN_DIR)$(PATH_SEP)installer-ui-wails$(BINARY_EXT) $(EXAMPLES_DIR)/ui
+build-ui-wails: wails-check
+	@echo "Building UI example with Wails GUI..."
+ifeq ($(OS),Windows_NT)
+	@cd $(EXAMPLES_DIR)\ui && \
+	(if not exist frontend\dist mkdir frontend\dist) && \
+	(if not exist frontend\dist\app.js ( \
+		echo Copying frontend files to dist... && \
+		xcopy /E /I /Y frontend\src\*.* frontend\dist\ >nul 2>&1 \
+	)) && \
+	wails build -clean && \
+	(if exist build\bin\installer-ui.exe ( \
+		copy /Y build\bin\installer-ui.exe ..\..\$(BIN_DIR)\installer-ui$(BINARY_EXT) >nul \
+	))
+else
+	@cd $(EXAMPLES_DIR)/ui && \
+	if [ ! -d "frontend/dist" ] || [ ! -f "frontend/dist/app.js" ]; then \
+		echo "Copying frontend files to dist..."; \
+		cp -r frontend/src/* frontend/dist/ 2>/dev/null || true; \
+	fi && \
+	wails build -clean && \
+	if [ -f "build/bin/installer-ui.exe" ]; then \
+		cp build/bin/installer-ui.exe ../../$(BIN_DIR)/installer-ui$(BINARY_EXT); \
+	elif [ -f "build/bin/installer-ui" ]; then \
+		cp build/bin/installer-ui ../../$(BIN_DIR)/installer-ui; \
+	fi
+endif
 
 .PHONY: build-ui-nogui
 build-ui-nogui:
@@ -107,15 +141,39 @@ build-ui-nogui:
 .PHONY: build-gui
 build-gui: wails-check
 	@echo "Building Wails GUI..."
+ifeq ($(OS),Windows_NT)
+	@cd $(EXAMPLES_DIR)\gui && \
+	(if not exist frontend\dist mkdir frontend\dist) && \
+	(if exist frontend\src\index.html ( \
+		copy /Y frontend\src\index.html frontend\dist\ >nul 2>&1 \
+	)) && \
+	(if exist frontend\src\assets ( \
+		if not exist frontend\dist\assets mkdir frontend\dist\assets && \
+		xcopy /E /I /Y frontend\src\assets\*.* frontend\dist\assets\ >nul 2>&1 \
+	)) && \
+	wails build -clean && \
+	(if exist build\bin\installer-gui.exe ( \
+		copy /Y build\bin\installer-gui.exe ..\..\$(BIN_DIR)\installer-gui$(BINARY_EXT) >nul \
+	))
+else
 	@cd $(EXAMPLES_DIR)/gui && \
 	if [ ! -d "frontend/dist" ]; then \
-		mkdir -p frontend/dist && \
-		cp -r frontend/src/* frontend/dist/ 2>/dev/null || true; \
+		mkdir -p frontend/dist; \
+	fi && \
+	if [ -f "frontend/src/index.html" ]; then \
+		cp frontend/src/index.html frontend/dist/; \
+	fi && \
+	if [ -d "frontend/src/assets" ]; then \
+		mkdir -p frontend/dist/assets && \
+		cp -r frontend/src/assets/* frontend/dist/assets/ 2>/dev/null || true; \
 	fi && \
 	wails build -clean && \
-	if [ -f "build/bin/"*".exe" ]; then \
-		cp build/bin/*.exe ../../$(BIN_DIR)/installer-gui$(BINARY_EXT); \
+	if [ -f "build/bin/installer-gui.exe" ]; then \
+		cp build/bin/installer-gui.exe ../../$(BIN_DIR)/installer-gui$(BINARY_EXT); \
+	elif [ -f "build/bin/installer-gui" ]; then \
+		cp build/bin/installer-gui ../../$(BIN_DIR)/installer-gui; \
 	fi
+endif
 
 # Test targets
 .PHONY: test
@@ -226,7 +284,11 @@ install: build-cli
 .PHONY: wails-check
 wails-check:
 	@echo "Checking Wails installation..."
+ifeq ($(OS),Windows_NT)
+	@where wails >nul 2>&1 || (echo Wails not found. Install: go install github.com/wailsapp/wails/v2/cmd/wails@latest && exit 1)
+else
 	@which wails > /dev/null 2>&1 || (echo "Wails not found. Install: go install github.com/wailsapp/wails/v2/cmd/wails@latest" && exit 1)
+endif
 	@echo "Wails is installed"
 
 # Development helpers

@@ -43,13 +43,21 @@ func All() {
 
 // Build builds all examples
 func Build() error {
-	mg.Deps(BuildCLI, BuildConsole, BuildPlatform, BuildUI, BuildUIWails, BuildUINoGUI)
+	mg.Deps(BuildCLI, BuildConsole, BuildPlatform, BuildUI, BuildUINoGUI)
 	
-	// Try to build GUI if Wails is available
+	// Try to build Wails GUIs if Wails is available
 	if err := checkWails(); err == nil {
-		mg.Deps(BuildGUI)
+		fmt.Println("Wails found, building GUI versions...")
+		// Build GUI versions but don't fail if one fails
+		if err := BuildGUI(); err != nil {
+			fmt.Printf("Warning: GUI build failed: %v\n", err)
+		}
+		if err := BuildUIWails(); err != nil {
+			fmt.Printf("Warning: UI Wails build failed: %v\n", err)
+		}
 	} else {
-		fmt.Println("Skipping GUI build: Wails not installed")
+		fmt.Println("Skipping Wails GUI builds: Wails not installed")
+		fmt.Println("To install Wails, run: mage wailsinstall")
 	}
 	
 	return nil
@@ -73,16 +81,77 @@ func BuildPlatform() error {
 	return buildBinary("installer-platform", "./examples/platform")
 }
 
-// BuildUI builds the UI example (default build)
+// BuildUI builds the UI example (CLI mode)
 func BuildUI() error {
-	fmt.Println("Building UI example...")
-	return buildBinary("installer-ui", "./examples/ui")
+	fmt.Println("Building UI example (CLI mode)...")
+	return buildBinary("installer-ui-cli", "./examples/ui")
 }
 
-// BuildUIWails builds the UI example with Wails support
+// BuildUIWails builds the UI example with Wails GUI
 func BuildUIWails() error {
-	fmt.Println("Building UI example with Wails support...")
-	return buildBinaryWithTags("installer-ui-wails", "./examples/ui", []string{"wails"})
+	fmt.Println("Building UI example with Wails GUI...")
+	
+	// Check Wails
+	if err := checkWails(); err != nil {
+		return fmt.Errorf("Wails not found: %w", err)
+	}
+	
+	// Prepare frontend
+	uiDir := filepath.Join(examplesDir, "ui")
+	frontendSrc := filepath.Join(uiDir, "frontend", "src")
+	frontendDist := filepath.Join(uiDir, "frontend", "dist")
+	
+	// Create dist directory if it doesn't exist
+	if err := os.MkdirAll(frontendDist, 0755); err != nil {
+		return err
+	}
+	
+	// Copy frontend files if not already there
+	if _, err := os.Stat(frontendSrc); err == nil {
+		if _, err := os.Stat(filepath.Join(frontendDist, "app.js")); os.IsNotExist(err) {
+			fmt.Println("Copying frontend files to dist...")
+			if err := copyFrontendFiles(frontendSrc, frontendDist); err != nil {
+				fmt.Printf("Warning: Failed to copy frontend files: %v\n", err)
+			}
+		}
+	}
+	
+	// Change to UI directory
+	originalDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	defer os.Chdir(originalDir)
+	
+	if err := os.Chdir(uiDir); err != nil {
+		return err
+	}
+	
+	// Build with Wails
+	if err := sh.Run("wails", "build", "-clean"); err != nil {
+		return fmt.Errorf("Wails build failed: %w", err)
+	}
+	
+	// Copy executable to bin directory
+	buildBin := filepath.Join("build", "bin")
+	entries, err := os.ReadDir(buildBin)
+	if err != nil {
+		return fmt.Errorf("Failed to read build output: %w", err)
+	}
+	
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), binExt) {
+			src := filepath.Join(buildBin, entry.Name())
+			dst := filepath.Join("..", "..", binDir, "installer-ui"+binExt)
+			if err := copyFile(src, dst); err != nil {
+				return fmt.Errorf("Failed to copy UI executable: %w", err)
+			}
+			fmt.Printf("UI installer built: %s\n", dst)
+			break
+		}
+	}
+	
+	return nil
 }
 
 // BuildUINoGUI builds the UI example without GUI support
@@ -102,7 +171,6 @@ func BuildGUI() error {
 	
 	// Prepare frontend
 	guiDir := filepath.Join(examplesDir, "gui")
-	frontendSrc := filepath.Join(guiDir, "frontend", "src")
 	frontendDist := filepath.Join(guiDir, "frontend", "dist")
 	
 	// Create dist directory if it doesn't exist
@@ -110,9 +178,13 @@ func BuildGUI() error {
 		return err
 	}
 	
-	// Copy frontend files
-	if err := copyDir(frontendSrc, frontendDist); err != nil {
-		fmt.Printf("Warning: Failed to copy frontend files: %v\n", err)
+	// Copy frontend files from src or src/assets
+	frontendSrc := filepath.Join(guiDir, "frontend", "src")
+	if _, err := os.Stat(frontendSrc); err == nil {
+		// Copy main files
+		if err := copyFrontendFiles(frontendSrc, frontendDist); err != nil {
+			fmt.Printf("Warning: Failed to copy frontend files: %v\n", err)
+		}
 	}
 	
 	// Change to GUI directory
@@ -312,6 +384,43 @@ func RunGUI() error {
 	return sh.RunV(binary)
 }
 
+// RunUI runs the UI installer (Wails GUI version)
+func RunUI() error {
+	mg.Deps(BuildUIWails)
+	binary := filepath.Join(binDir, "installer-ui"+binExt)
+	return sh.RunV(binary)
+}
+
+// RunUICLI runs the UI installer in CLI mode
+func RunUICLI() error {
+	mg.Deps(BuildUI)
+	binary := filepath.Join(binDir, "installer-ui-cli"+binExt)
+	return sh.RunV(binary, "--help")
+}
+
+// DevUI starts Wails development mode for UI example
+func DevUI() error {
+	fmt.Println("Starting Wails development mode for UI example...")
+	
+	if err := checkWails(); err != nil {
+		return err
+	}
+	
+	// Change to UI directory
+	uiDir := filepath.Join(examplesDir, "ui")
+	originalDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	defer os.Chdir(originalDir)
+	
+	if err := os.Chdir(uiDir); err != nil {
+		return err
+	}
+	
+	return sh.RunV("wails", "dev")
+}
+
 // Version shows version information
 func Version() {
 	fmt.Printf("Version: %s\n", version)
@@ -435,4 +544,42 @@ func removeFiles(dir, pattern string) error {
 		
 		return nil
 	})
+}
+
+// copyFrontendFiles copies frontend files intelligently
+func copyFrontendFiles(src, dst string) error {
+	// Check for index.html in src
+	indexPath := filepath.Join(src, "index.html")
+	if _, err := os.Stat(indexPath); err == nil {
+		// Copy index.html
+		if err := copyFile(indexPath, filepath.Join(dst, "index.html")); err != nil {
+			return err
+		}
+	}
+	
+	// Check for assets directory
+	assetsDir := filepath.Join(src, "assets")
+	if _, err := os.Stat(assetsDir); err == nil {
+		// Copy assets to dst/assets
+		dstAssets := filepath.Join(dst, "assets")
+		if err := os.MkdirAll(dstAssets, 0755); err != nil {
+			return err
+		}
+		if err := copyDir(assetsDir, dstAssets); err != nil {
+			return err
+		}
+	}
+	
+	// Check for direct JS/CSS files
+	files := []string{"app.js", "style.css", "main.js", "main.css"}
+	for _, file := range files {
+		srcFile := filepath.Join(src, file)
+		if _, err := os.Stat(srcFile); err == nil {
+			if err := copyFile(srcFile, filepath.Join(dst, file)); err != nil {
+				fmt.Printf("Warning: Failed to copy %s: %v\n", file, err)
+			}
+		}
+	}
+	
+	return nil
 }
