@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mmso2016/setupkit/installer/core"
+	"github.com/setupkit/installer/core"
 )
 
 type contextKey string

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SetupKit Installer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .installer-window {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 800px;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .welcome-page h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .welcome-page p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .license-box {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+        }
+        
+        .component-list {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .component-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .component-item:hover {
+            background: #f8f8f8;
+        }
+        
+        .component-item:last-child {
+            border-bottom: none;
+        }
+        
+        .component-checkbox {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .component-checkbox:disabled {
+            cursor: not-allowed;
+        }
+        
+        .component-info {
+            flex: 1;
+        }
+        
+        .component-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .component-desc {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .component-size {
+            font-size: 12px;
+            color: #999;
+            margin-left: 20px;
+        }
+        
+        .progress-bar {
+            background: #f0f0f0;
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .footer {
+            padding: 20px 40px;
+            background: #f8f8f8;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .button {
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            outline: none;
+        }
+        
+        .button-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .button-primary:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        .button-secondary {
+            background: white;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .button-secondary:hover {
+            background: #f8f8f8;
+        }
+        
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .success-icon {
+            font-size: 64px;
+            color: #4caf50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .status-text {
+            text-align: center;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="installer-window">
+        <div class="header">
+            <h1 id="appName">My Application</h1>
+            <p id="appVersion">Version 1.0.0</p>
+        </div>
+        
+        <div class="content">
+            <!-- Welcome Page -->
+            <div class="page active" id="page-welcome">
+                <h2>Welcome to the Setup Wizard</h2>
+                <p>This wizard will guide you through the installation process.</p>
+                <p>Click "Next" to continue, or "Cancel" to exit the setup.</p>
+            </div>
+            
+            <!-- License Page -->
+            <div class="page" id="page-license">
+                <h2>License Agreement</h2>
+                <p>Please review the license agreement:</p>
+                <div class="license-box" id="licenseText">Loading license...</div>
+                <label>
+                    <input type="checkbox" id="acceptLicense" onchange="updateButtons()">
+                    I accept the terms of the license agreement
+                </label>
+            </div>
+            
+            <!-- Components Page -->
+            <div class="page" id="page-components">
+                <h2>Select Components</h2>
+                <p>Choose which components to install:</p>
+                <div class="component-list" id="componentList">
+                    Loading components...
+                </div>
+            </div>
+            
+            <!-- Installation Page -->
+            <div class="page" id="page-install">
+                <h2>Installing...</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+                <p class="status-text" id="statusText">Preparing installation...</p>
+            </div>
+            
+            <!-- Complete Page -->
+            <div class="page" id="page-complete">
+                <div class="success-icon">✓</div>
+                <h2 style="text-align: center;">Installation Complete</h2>
+                <p style="text-align: center;">My Application has been successfully installed.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <button class="button button-secondary" id="btnBack" onclick="previousPage()">Back</button>
+            <div>
+                <button class="button button-secondary" id="btnCancel" onclick="cancelInstall()">Cancel</button>
+                <button class="button button-primary" id="btnNext" onclick="nextPage()">Next</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Wails runtime will be injected automatically
+    </script>
+    <script>
+        let currentPage = 0;
+        const pages = ['welcome', 'license', 'components', 'install', 'complete'];
+        let config = {};
+        
+        // Initialize the installer
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Get configuration from backend
+                config = await window.go.main.App.GetConfig();
+                
+                // Update UI with config
+                document.getElementById('appName').textContent = config.appName;
+                document.getElementById('appVersion').textContent = `Version ${config.version}`;
+                document.getElementById('licenseText').textContent = config.license;
+                
+                // Render components
+                renderComponents();
+            } catch (error) {
+                console.error('Failed to load configuration:', error);
+            }
+        });
+        
+        function renderComponents() {
+            const list = document.getElementById('componentList');
+            list.innerHTML = '';
+            
+            config.components.forEach(comp => {
+                const item = document.createElement('div');
+                item.className = 'component-item';
+                item.innerHTML = `
+                    <input type="checkbox" 
+                           class="component-checkbox" 
+                           id="comp-${comp.id}"
+                           ${comp.selected ? 'checked' : ''}
+                           ${comp.required ? 'disabled checked' : ''}
+                           onchange="updateComponentSelection('${comp.id}')">
+                    <div class="component-info">
+                        <div class="component-name">${comp.name}</div>
+                        ${comp.description ? `<div class="component-desc">${comp.description}</div>` : ''}
+                    </div>
+                    <div class="component-size">${formatSize(comp.size)}</div>
+                `;
+                list.appendChild(item);
+            });
+        }
+        
+        function formatSize(bytes) {
+            const mb = bytes / (1024 * 1024);
+            return `${mb.toFixed(1)} MB`;
+        }
+        
+        function updateComponentSelection(id) {
+            const checkbox = document.getElementById(`comp-${id}`);
+            const component = config.components.find(c => c.id === id);
+            if (component) {
+                component.selected = checkbox.checked;
+            }
+        }
+        
+        function showPage(index) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page-${pages[index]}`).classList.add('active');
+            updateButtons();
+        }
+        
+        function updateButtons() {
+            const btnBack = document.getElementById('btnBack');
+            const btnNext = document.getElementById('btnNext');
+            const btnCancel = document.getElementById('btnCancel');
+            
+            // Back button
+            btnBack.style.display = currentPage === 0 ? 'none' : 'inline-block';
+            btnBack.disabled = currentPage === pages.length - 1;
+            
+            // Cancel button
+            btnCancel.style.display = currentPage === pages.length - 1 ? 'none' : 'inline-block';
+            
+            // Next button
+            if (currentPage === pages.length - 1) {
+                btnNext.textContent = 'Finish';
+            } else if (currentPage === pages.indexOf('install') - 1) {
+                btnNext.textContent = 'Install';
+            } else {
+                btnNext.textContent = 'Next';
+            }
+            
+            // Disable next on license page if not accepted
+            if (currentPage === pages.indexOf('license')) {
+                const acceptCheckbox = document.getElementById('acceptLicense');
+                btnNext.disabled = !acceptCheckbox.checked;
+            }
+            
+            // Disable buttons during installation
+            if (currentPage === pages.indexOf('install')) {
+                btnBack.disabled = true;
+                btnNext.disabled = true;
+                btnCancel.disabled = true;
+            }
+        }
+        
+        async function nextPage() {
+            if (currentPage === pages.length - 1) {
+                // Finish
+                window.close();
+                return;
+            }
+            
+            if (currentPage === pages.indexOf('components')) {
+                // Start installation
+                currentPage++;
+                showPage(currentPage);
+                await startInstallation();
+                return;
+            }
+            
+            currentPage++;
+            showPage(currentPage);
+        }
+        
+        function previousPage() {
+            if (currentPage > 0 && currentPage < pages.indexOf('install')) {
+                currentPage--;
+                showPage(currentPage);
+            }
+        }
+        
+        function cancelInstall() {
+            if (confirm('Are you sure you want to cancel the installation?')) {
+                window.close();
+            }
+        }
+        
+        async function startInstallation() {
+            const progressBar = document.getElementById('progressBar');
+            const statusText = document.getElementById('statusText');
+            
+            // Simulate installation progress
+            for (let i = 0; i <= 100; i += 5) {
+                progressBar.style.width = `${i}%`;
+                statusText.textContent = `Installing... ${i}%`;
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Call backend installation
+            try {
+                const result = await window.go.main.App.StartInstallation({
+                    components: config.components.filter(c => c.selected)
+                });
+                console.log(result);
+            } catch (error) {
+                console.error('Installation failed:', error);
+            }
+            
+            // Move to complete page
+            currentPage = pages.indexOf('complete');
+            showPage(currentPage);
+        }
+        
+        // Initialize first page
+        showPage(0);
+    </script>
+</body>
+</html>

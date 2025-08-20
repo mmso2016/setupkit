@@ -1,9 +1,10 @@
-module github.com/mmso2016/setupkit
+module github.com/setupkit
 
 go 1.23.5
 
 require (
 	github.com/magefile/mage v1.15.0
+	github.com/mmso2016/setupkit v0.0.0-20250819224411-8059624f3bc3
 	github.com/wailsapp/wails/v2 v2.10.2
 	golang.org/x/sys v0.35.0
 	gopkg.in/yaml.v3 v3.0.1

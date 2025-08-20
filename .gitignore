@@ -63,3 +63,4 @@ __debug_bin
 .env
 .env.local
 /examples/gui/frontend/package.json.md5
+/_old_examples

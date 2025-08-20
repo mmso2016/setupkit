@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 	
-	"github.com/mmso2016/setupkit/installer"
-	"github.com/mmso2016/setupkit/installer/components"
-	"github.com/mmso2016/setupkit/installer/core"
+	"github.com/setupkit/installer"
+	"github.com/setupkit/installer/components"
+	"github.com/setupkit/installer/core"
 )
 
 // MockPlatformInstaller implements a mock platform installer for testing

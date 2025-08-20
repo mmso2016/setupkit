@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 	
-	"github.com/mmso2016/setupkit/installer"
+	"github.com/setupkit/installer"
 )
 
 // BenchmarkInstallerCreation benchmarks installer creation

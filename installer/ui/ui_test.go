@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mmso2016/setupkit/installer/core"
-	"github.com/mmso2016/setupkit/installer/ui"
+	"github.com/setupkit/installer/core"
+	"github.com/setupkit/installer/ui"
 )
 
 // TestSilentUI tests the silent UI implementation
