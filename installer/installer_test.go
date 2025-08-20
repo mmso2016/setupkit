@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/setupkit/installer"
+	"github.com/mmso2016/setupkit/installer"
 )
 
 // TestNewInstaller tests installer creation with various options

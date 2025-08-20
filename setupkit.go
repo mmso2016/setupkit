@@ -2,13 +2,13 @@
 package setupkit
 
 import (
-	"github.com/setupkit/pkg/installer"
+	"github.com/mmso2016/setupkit/pkg/installer"
 )
 
 // Config is an alias for installer.Config
 type Config = installer.Config
 
-// Component is an alias for installer.Component  
+// Component is an alias for installer.Component
 type Component = installer.Component
 
 // Theme is an alias for installer.Theme
@@ -53,7 +53,7 @@ const (
 // Predefined themes
 var (
 	ThemeDefault = Theme{Name: "default"}
-	ThemeDark = Theme{
+	ThemeDark    = Theme{
 		Name: "dark",
 		CustomCSS: `
 			body { background: #1a1a2e; }

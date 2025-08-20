@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	sk "github.com/mmso2016/setupkit"
 	"github.com/mmso2016/setupkit/installer/core"
 	"github.com/mmso2016/setupkit/installer/ui"
 )
@@ -199,5 +198,7 @@ func TestUIFactory(t *testing.T) {
 func TestHasDisplay(t *testing.T) {
 	// This is environment-dependent, just ensure it doesn't panic
 	// and returns a boolean
-	_ = sk.HasDisplay()
+	result := ui.HasDisplay()
+	// Just verify it returns a boolean value without panicking
+	_ = result
 }

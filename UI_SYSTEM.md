@@ -24,7 +24,7 @@ You provide configuration, the framework provides everything else:
 ```go
 package main
 
-import "github.com/setupkit"
+import "github.com/mmso2016/setupkit"
 
 func main() {
     setupkit.Install(setupkit.Config{
@@ -41,7 +41,7 @@ package main
 
 import (
     "log"
-    "github.com/setupkit"
+    "github.com/mmso2016/setupkit"
 )
 
 func main() {

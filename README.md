@@ -2,7 +2,7 @@
 
 > **Native installer FRAMEWORK for Go applications - no InnoSetup, InstallShield, or NSIS required.**
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/setupkit.svg)](https://pkg.go.dev/github.com/setupkit)
+[![Go Reference](https://pkg.go.dev/badge/github.com/mmso2016/setupkit.svg)](https://pkg.go.dev/github.com/mmso2016/setupkit)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-available-green.svg)](UI_SYSTEM.md)
 
@@ -30,7 +30,7 @@ Traditional installer tools require learning scripting languages (Pascal for Inn
 ### Installation
 
 ```bash
-go get github.com/setupkit
+go get github.com/mmso2016/setupkit
 ```
 
 ### Minimal Example (5 lines!)
@@ -38,7 +38,7 @@ go get github.com/setupkit
 ```go
 package main
 
-import "github.com/setupkit"
+import "github.com/mmso2016/setupkit"
 
 func main() {
     setupkit.Install(setupkit.Config{
@@ -55,7 +55,7 @@ package main
 
 import (
     "log"
-    "github.com/setupkit"
+    "github.com/mmso2016/setupkit"
 )
 
 func main() {
@@ -304,9 +304,9 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ## Support
 
-- 🐛 [Report bugs](https://github.com/setupkit/setupkit/issues)
-- 💡 [Request features](https://github.com/setupkit/setupkit/issues)
-- 📖 [Read documentation](https://github.com/setupkit/setupkit/wiki)
+- 🐛 [Report bugs](https://github.com/mmso2016/setupkit/setupkit/issues)
+- 💡 [Request features](https://github.com/mmso2016/setupkit/setupkit/issues)
+- 📖 [Read documentation](https://github.com/mmso2016/setupkit/setupkit/wiki)
 - ⭐ Star the project if you find it useful!
 
 ---

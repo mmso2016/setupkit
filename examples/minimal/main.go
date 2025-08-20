@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/setupkit/pkg/installer"
+	"github.com/mmso2016/setupkit/pkg/installer"
 )
 
 func main() {

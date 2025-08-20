@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/setupkit/internal/ui"
+	"github.com/mmso2016/setupkit/internal/ui"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -253,7 +253,6 @@ func (i *Installer) Run() error {
 		},
 	})
 }
-
 
 // Quick function for simple installations
 func Install(config Config) error {

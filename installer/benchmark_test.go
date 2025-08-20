@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	
-	"github.com/setupkit/installer"
+
+	"github.com/mmso2016/setupkit/installer"
 )
 
 // BenchmarkInstallerCreation benchmarks installer creation
@@ -32,7 +32,7 @@ func BenchmarkInstallerWithComponents(b *testing.B) {
 			},
 		}
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = installer.New(
@@ -45,19 +45,19 @@ func BenchmarkInstallerWithComponents(b *testing.B) {
 // BenchmarkLoggerOperations benchmarks logger operations
 func BenchmarkLoggerOperations(b *testing.B) {
 	logger := installer.NewLogger("info", "")
-	
+
 	b.Run("Info", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			logger.Info("Benchmark message", "iteration", i)
 		}
 	})
-	
+
 	b.Run("Debug", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			logger.Debug("Debug message", "iteration", i)
 		}
 	})
-	
+
 	b.Run("Verbose", func(b *testing.B) {
 		logger.SetVerbose(true)
 		for i := 0; i < b.N; i++ {
@@ -86,7 +86,7 @@ func BenchmarkExitCodeLookup(b *testing.B) {
 		installer.ExitUserCancelled,
 		999, // Unknown code
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = installer.ExitCodeDescription(codes[i%len(codes)])
@@ -104,12 +104,12 @@ func BenchmarkComponentSelection(b *testing.B) {
 			Required: i%5 == 0,
 		}
 	}
-	
+
 	inst, _ := installer.New(
 		installer.WithAppName("BenchApp"),
 		installer.WithComponents(components...),
 	)
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		selected := make([]installer.Component, 0, 10)
@@ -130,7 +130,7 @@ func BenchmarkPathConfiguration(b *testing.B) {
 			System:  i%2 == 0,
 			Dirs:    []string{"/bin", "/sbin", "/usr/bin", "/usr/local/bin"},
 		}
-		
+
 		_, _ = installer.New(
 			installer.WithAppName("BenchApp"),
 			installer.WithPathConfig(pathConfig),

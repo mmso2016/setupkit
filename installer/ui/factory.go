@@ -33,7 +33,7 @@ func CreateUI(mode core.Mode) (core.UI, error) {
 // detectBestUI determines the best UI mode for the current environment
 func detectBestUI() (core.UI, error) {
 	// Check if we're in a GUI environment
-	if hasDisplay() {
+	if HasDisplay() {
 		// Try to create GUI
 		ui, err := createGUI()
 		if err == nil {
@@ -46,8 +46,8 @@ func detectBestUI() (core.UI, error) {
 	return createCLI()
 }
 
-// hasDisplay checks if a display is available
-func hasDisplay() bool {
+// HasDisplay checks if a display is available
+func HasDisplay() bool {
 	// On Windows, we generally have a display if not running as a service
 	// On Unix systems, check for DISPLAY environment variable
 	// This is a simplified check - improve as needed

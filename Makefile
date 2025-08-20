@@ -3,7 +3,7 @@
 
 # Variables
 BINARY_NAME := setupkit-example
-MODULE := github.com/setupkit
+MODULE := github.com/mmso2016/setupkit
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 GOFLAGS := -v

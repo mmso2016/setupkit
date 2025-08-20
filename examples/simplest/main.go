@@ -1,6 +1,6 @@
 package main
 
-import "github.com/setupkit"
+import "github.com/mmso2016/setupkit"
 
 func main() {
 	// The absolute simplest installer - just 5 lines!

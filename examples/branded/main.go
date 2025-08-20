@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
-	
-	"github.com/setupkit"
+
+	"github.com/mmso2016/setupkit"
 )
 
 func main() {
