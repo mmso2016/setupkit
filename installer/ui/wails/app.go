@@ -407,3 +407,28 @@ func (a *App) FormatSize(bytes int64) string {
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
+
+// FinishInstallation completes the installation and optionally launches the app
+func (a *App) FinishInstallation(launchApp, viewReadme bool) error {
+	// Handle post-installation actions
+	if launchApp {
+		// Launch the installed application if requested
+		// This could be implemented based on the specific application
+		runtime.LogInfo(a.ctx, "Application launch requested")
+	}
+
+	if viewReadme {
+		// Open README or documentation if requested
+		runtime.LogInfo(a.ctx, "README view requested")
+	}
+
+	// Exit the installer
+	runtime.Quit(a.ctx)
+	return nil
+}
+
+// ExitInstaller exits the installer application
+func (a *App) ExitInstaller() error {
+	runtime.Quit(a.ctx)
+	return nil
+}

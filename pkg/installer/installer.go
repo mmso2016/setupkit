@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/setupkit/internal/ui"
 	"github.com/wailsapp/wails/v2"
@@ -14,28 +15,28 @@ import (
 // Config represents the installer configuration
 type Config struct {
 	// Basic Info
-	AppName     string
-	Version     string
-	Publisher   string
-	Website     string
-	License     string
-	
+	AppName   string
+	Version   string
+	Publisher string
+	Website   string
+	License   string
+
 	// Installation
 	InstallPath string
 	Components  []Component
-	
+
 	// UI Customization
 	Theme           Theme
 	WindowWidth     int
 	WindowHeight    int
 	ShowThemeSelect bool
-	
+
 	// Callbacks
-	OnProgress      func(percent int, status string)
-	OnComplete      func(path string)
-	OnError         func(error)
-	BeforeInstall   func() error
-	AfterInstall    func() error
+	OnProgress    func(percent int, status string)
+	OnComplete    func(path string)
+	OnError       func(error)
+	BeforeInstall func() error
+	AfterInstall  func() error
 }
 
 // Component represents an installable component
@@ -43,7 +44,7 @@ type Component struct {
 	ID          string
 	Name        string
 	Description string
-	Size        int64  // in bytes
+	Size        int64 // in bytes
 	Required    bool
 	Selected    bool
 	Files       []string
@@ -134,6 +135,42 @@ func (a *App) StartInstallation(options map[string]interface{}) error {
 	return nil
 }
 
+// FinishInstallation completes the installation and exits the application
+func (a *App) FinishInstallation(launchApp, viewReadme bool) error {
+	// Handle post-installation actions
+	if launchApp {
+		// TODO: Launch the installed application if requested
+		fmt.Printf("Launching application...\n")
+	}
+
+	if viewReadme {
+		// TODO: Open README or documentation if requested
+		fmt.Printf("Opening documentation...\n")
+	}
+
+	// Exit the application
+	if a.ctx != nil {
+		// Try to exit gracefully through Wails runtime
+		select {
+		case <-a.ctx.Done():
+			return nil
+		default:
+			// Force exit if context is not cancelled
+			os.Exit(0)
+		}
+	} else {
+		os.Exit(0)
+	}
+
+	return nil
+}
+
+// ExitInstaller exits the installer application immediately
+func (a *App) ExitInstaller() error {
+	os.Exit(0)
+	return nil
+}
+
 // New creates a new installer instance
 func New(config *Config) *Installer {
 	// Set defaults
@@ -157,7 +194,7 @@ func New(config *Config) *Installer {
 
 // Run starts the installer UI
 func (i *Installer) Run() error {
-	// Generate UI HTML
+	// Generate UI HTML with template rendering
 	uiConfig := &ui.Config{
 		AppName:         i.config.AppName,
 		Version:         i.config.Version,
@@ -190,26 +227,33 @@ func (i *Installer) Run() error {
 		return fmt.Errorf("failed to generate UI: %w", err)
 	}
 
-	// Create Wails app
+	// Create Wails app with rendered HTML
 	return wails.Run(&options.App{
-		Title:     i.config.AppName + " Setup",
-		Width:     i.config.WindowWidth,
-		Height:    i.config.WindowHeight,
-		MinWidth:  800,
-		MinHeight: 600,
-		AssetServer: &assetserver.Options{
-			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "text/html")
-				w.Write([]byte(html))
-			}),
-		},
+		Title:            i.config.AppName + " Setup",
+		Width:            i.config.WindowWidth,
+		Height:           i.config.WindowHeight,
+		MinWidth:         800,
+		MinHeight:        600,
 		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 1},
 		OnStartup:        i.app.NewContext,
 		Bind: []interface{}{
 			i.app,
 		},
+		// Serve the rendered HTML with Wails runtime support
+		AssetServer: &assetserver.Options{
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/" || r.URL.Path == "/index.html" {
+					w.Header().Set("Content-Type", "text/html")
+					w.Write([]byte(html))
+					return
+				}
+				// Let Wails handle other assets like runtime.js
+				http.NotFound(w, r)
+			}),
+		},
 	})
 }
+
 
 // Quick function for simple installations
 func Install(config Config) error {

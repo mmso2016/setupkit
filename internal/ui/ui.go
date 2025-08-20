@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"embed"
 	_ "embed"
 	"html/template"
+	"io/fs"
 	"strings"
 )
 
@@ -16,6 +18,9 @@ var (
 
 	//go:embed templates/installer.js
 	defaultJS string
+
+	//go:embed all:templates
+	assets embed.FS
 )
 
 // Config represents the installer UI configuration
@@ -69,8 +74,7 @@ func GenerateHTML(config *Config) (string, error) {
 	html := strings.ReplaceAll(defaultHTML, `<link rel="stylesheet" href="style.css">`, 
 		`<style>`+defaultCSS+`</style>`)
 	
-	// Embed JS directly
-	html = strings.ReplaceAll(html, `<script src="./wailsjs/runtime/runtime.js"></script>`, "")
+	// Embed JS directly - Keep Wails runtime for backend communication
 	html = strings.ReplaceAll(html, `<script src="app.js"></script>`, 
 		`<script>`+defaultJS+`</script>`)
 
@@ -107,4 +111,14 @@ func GetDefaultCSS() string {
 // GetDefaultJS returns the default JavaScript
 func GetDefaultJS() string {
 	return defaultJS
+}
+
+// GetAssets returns the embedded filesystem pointing to templates subdirectory
+func GetAssets() fs.FS {
+	templatesFS, err := fs.Sub(assets, "templates")
+	if err != nil {
+		// Fallback to full assets if sub fails
+		return assets
+	}
+	return templatesFS
 }

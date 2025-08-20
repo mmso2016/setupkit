@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/setupkit/installer/core"
-	"github.com/setupkit/installer/ui"
+	sk "github.com/mmso2016/setupkit"
+	"github.com/mmso2016/setupkit/installer/core"
+	"github.com/mmso2016/setupkit/installer/ui"
 )
 
 // TestSilentUI tests the silent UI implementation
@@ -198,5 +199,5 @@ func TestUIFactory(t *testing.T) {
 func TestHasDisplay(t *testing.T) {
 	// This is environment-dependent, just ensure it doesn't panic
 	// and returns a boolean
-	_ = ui.HasDisplay()
+	_ = sk.HasDisplay()
 }

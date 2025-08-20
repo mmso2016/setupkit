@@ -524,20 +524,64 @@ async function finishInstallation() {
     const launchApp = document.getElementById('launchApp').checked;
     const viewReadme = document.getElementById('viewReadme').checked;
     
+    console.log('finishInstallation called');
+    console.log('window.go available:', !!window.go);
+    console.log('window.runtime available:', !!window.runtime);
+    
     try {
         if (window.go && window.go.main && window.go.main.App) {
+            console.log('Calling FinishInstallation via Wails');
             await window.go.main.App.FinishInstallation(launchApp, viewReadme);
         } else {
-            // Standalone mode
+            console.log('Wails backend not available, trying alternatives');
+            
+            // Try ExitInstaller method
+            if (window.go && window.go.main && window.go.main.App && window.go.main.App.ExitInstaller) {
+                console.log('Calling ExitInstaller');
+                await window.go.main.App.ExitInstaller();
+                return;
+            }
+            
+            // Standalone mode fallbacks
             if (launchApp) {
                 alert('Application would be launched now.');
             }
             if (viewReadme) {
                 alert('README would be opened now.');
             }
-            window.location.reload(); // Reset the installer
+            
+            // Try multiple exit strategies
+            console.log('Trying runtime.Quit()');
+            if (window.runtime && window.runtime.Quit) {
+                try {
+                    window.runtime.Quit();
+                    return;
+                } catch (e) {
+                    console.log('runtime.Quit failed:', e);
+                }
+            }
+            
+            console.log('Trying window.close()');
+            try {
+                window.close();
+            } catch (e) {
+                console.log('window.close failed:', e);
+            }
+            
+            // Force exit after delay
+            setTimeout(() => {
+                console.log('Forcing exit with location change');
+                try {
+                    window.location.href = 'about:blank';
+                } catch (e) {
+                    console.log('location change failed:', e);
+                    alert('Installation completed. Please close this window manually.');
+                }
+            }, 1000);
         }
     } catch (error) {
+        console.error('Error in finishInstallation:', error);
+        alert('Installation completed. Please close this window manually.');
         window.close();
     }
 }

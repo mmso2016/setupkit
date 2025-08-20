@@ -34,16 +34,17 @@ var (
 // Default target
 var Default = All
 
-// All runs clean, test and build
+// All runs clean, test and build all examples
 func All() {
 	mg.Deps(Clean)
 	mg.Deps(Test)
 	mg.Deps(Build)
 }
 
-// Build builds the example installer using the framework
+// Build builds the minimal example installer using the framework
+/*
 func Build() error {
-	fmt.Println("Building SetupKit example installer...")
+	fmt.Println("Building SetupKit minimal example installer...")
 	fmt.Println("Note: The SetupKit framework provides all UI components!")
 	fmt.Println()
 
@@ -70,6 +71,53 @@ func Build() error {
 	fmt.Printf("📦 Output: %s\n", output)
 	fmt.Println()
 	fmt.Println("The framework has embedded the complete UI.")
+	fmt.Println("No additional files or folders needed!")
+
+	return nil
+}
+*/
+
+// BuildExamples builds all example installers using the framework
+func Build() error {
+	fmt.Println("Building all SetupKit example installers...")
+	fmt.Println("Note: The SetupKit framework provides all UI components!")
+	fmt.Println()
+
+	// Create bin directory
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		return err
+	}
+
+	// Define all examples
+	examples := []struct {
+		name string
+		dir  string
+	}{
+		{"minimal", "./examples/minimal"},
+		{"simplest", "./examples/simplest"},
+		{"branded", "./examples/branded"},
+	}
+
+	// Build ldflags
+	ldflags := fmt.Sprintf("-s -w -X main.Version=%s -X main.BuildDate=%s", version, buildDate)
+
+	// Build each example
+	for _, example := range examples {
+		fmt.Printf("Building %s example...\n", example.name)
+		output := filepath.Join(binDir, "setupkit-"+example.name+binExt)
+
+		args := []string{"build", "-tags", "desktop,production", "-v", "-ldflags", ldflags, "-o", output, example.dir}
+
+		if err := sh.RunV("go", args...); err != nil {
+			return fmt.Errorf("build failed for %s example: %w", example.name, err)
+		}
+
+		fmt.Printf("✅ %s example built: %s\n", example.name, output)
+	}
+
+	fmt.Println()
+	fmt.Println("✅ All examples built successfully!")
+	fmt.Println("The framework has embedded the complete UI in each example.")
 	fmt.Println("No additional files or folders needed!")
 
 	return nil
