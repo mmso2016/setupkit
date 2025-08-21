@@ -387,7 +387,7 @@ func TestComponentExecution(t *testing.T) {
 		Installer: func(ctx context.Context) error {
 			installerCalled = true
 			// Check context values
-			if ctx.Value("test_key") != "test_value" {
+			if ctx.Value(contextKey("test_key")) != "test_value" {
 				t.Error("Context value not found")
 			}
 			return nil

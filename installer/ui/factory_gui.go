@@ -4,12 +4,13 @@
 package ui
 
 import (
+	"fmt"
+
 	"github.com/mmso2016/setupkit/installer/core"
 )
 
 // createGUI creates a basic GUI-based UI (fallback implementation)
 func createGUI() (core.UI, error) {
-	// Basic GUI implementation - could use native dialogs or fall back to CLI
-	// For now, fall back to CLI since no GUI framework is available
-	return createCLI()
+	// GUI support not available without specific build tags
+	return nil, fmt.Errorf("GUI support not available - compile with wails build tag or use --mode cli")
 }
