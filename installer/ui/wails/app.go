@@ -432,3 +432,228 @@ func (a *App) ExitInstaller() error {
 	runtime.Quit(a.ctx)
 	return nil
 }
+
+// DFA Wizard Integration Methods
+
+// WizardState represents the current state of the DFA wizard
+type WizardState struct {
+	State  string                 `json:"state"`
+	Config WizardStateConfig      `json:"config"`
+	Data   map[string]interface{} `json:"data"`
+}
+
+// WizardStateConfig represents the configuration for a wizard state
+type WizardStateConfig struct {
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Actions     []WizardAction `json:"actions"`
+	Fields      []WizardField  `json:"fields,omitempty"`
+}
+
+// WizardAction represents an available action in the current state
+type WizardAction struct {
+	ID      string `json:"id"`
+	Type    string `json:"type"`
+	Label   string `json:"label"`
+	Enabled bool   `json:"enabled"`
+	Primary bool   `json:"primary,omitempty"`
+}
+
+// WizardField represents a form field configuration
+type WizardField struct {
+	ID       string      `json:"id"`
+	Type     string      `json:"type"`
+	Label    string      `json:"label"`
+	Required bool        `json:"required,omitempty"`
+	Options  interface{} `json:"options,omitempty"`
+}
+
+// WizardActionResult represents the result of a wizard action
+type WizardActionResult struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error,omitempty"`
+}
+
+// InitializeDFAWizard initializes the DFA wizard system
+func (a *App) InitializeDFAWizard() error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	
+	// Check if installer supports DFA wizard
+	if !a.installer.IsUsingDFAWizard() {
+		return fmt.Errorf("DFA wizard is not enabled")
+	}
+	
+	// Get wizard adapter
+	adapter := a.installer.GetWizardAdapter()
+	if adapter == nil {
+		return fmt.Errorf("wizard adapter not available")
+	}
+	
+	// Initialize the wizard with backend callbacks
+	coreCtx := &core.Context{
+		Config:   a.config,
+		Logger:   core.NewLogger("info", ""),
+		Metadata: make(map[string]interface{}),
+	}
+	coreCtx.Metadata["installer"] = a.installer
+	
+	err := adapter.Initialize(coreCtx)
+	if err != nil {
+		return fmt.Errorf("failed to initialize wizard adapter: %w", err)
+	}
+	
+	runtime.LogInfo(a.ctx, "DFA Wizard initialized successfully")
+	return nil
+}
+
+// GetCurrentWizardState returns the current state of the DFA wizard
+func (a *App) GetCurrentWizardState() (*WizardState, error) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	
+	// Get wizard adapter
+	adapter := a.installer.GetWizardAdapter()
+	if adapter == nil {
+		return nil, fmt.Errorf("wizard adapter not available")
+	}
+	
+	// Get current state from DFA
+	currentState := adapter.GetCurrentState()
+	if currentState == "" {
+		return nil, fmt.Errorf("no current state available")
+	}
+	
+	// Get state configuration
+	stateConfig := adapter.GetCurrentStateConfig()
+	
+	// Build wizard state response
+	state := &WizardState{
+		State: string(currentState),
+		Config: WizardStateConfig{
+			Title:       stateConfig.Title,
+			Description: stateConfig.Description,
+			Actions:     convertActions(stateConfig.Actions),
+			Fields:      convertFields(stateConfig.Fields),
+		},
+		Data: adapter.GetWizardData(),
+	}
+	
+	return state, nil
+}
+
+// PerformWizardAction performs an action in the DFA wizard
+func (a *App) PerformWizardAction(actionType string, data map[string]interface{}) (*WizardActionResult, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	
+	// Get wizard adapter
+	adapter := a.installer.GetWizardAdapter()
+	if adapter == nil {
+		return nil, fmt.Errorf("wizard adapter not available")
+	}
+	
+	// Convert string action type to ActionType
+	var action core.ActionType
+	switch actionType {
+	case "next":
+		action = core.ActionTypeNext
+	case "back":
+		action = core.ActionTypeBack
+	case "skip":
+		action = core.ActionTypeSkip
+	case "cancel":
+		action = core.ActionTypeCancel
+	case "finish":
+		action = core.ActionTypeFinish
+	default:
+		action = core.ActionType(actionType)
+	}
+	
+	// Perform the action through the adapter
+	err := adapter.PerformAction(action, data)
+	
+	result := &WizardActionResult{
+		Success: err == nil,
+	}
+	
+	if err != nil {
+		result.Error = err.Error()
+	}
+	
+	// Emit state change event if successful
+	if result.Success {
+		runtime.EventsEmit(a.ctx, "wizard-state-changed", map[string]interface{}{
+			"action": actionType,
+			"state":  string(adapter.GetCurrentState()),
+		})
+	}
+	
+	return result, nil
+}
+
+// GetWizardComponents returns available components for selection
+func (a *App) GetWizardComponents() ([]ComponentInfo, error) {
+	components := make([]ComponentInfo, 0, len(a.config.Components))
+	for _, c := range a.config.Components {
+		components = append(components, ComponentInfo{
+			ID:          c.ID,
+			Name:        c.Name,
+			Description: c.Description,
+			Required:    c.Required,
+			Selected:    c.Selected || c.Required,
+			Size:        c.Size,
+		})
+	}
+	return components, nil
+}
+
+// SelectDirectory opens a directory selection dialog for DFA wizard
+func (a *App) SelectDirectory() (string, error) {
+	return a.BrowseForFolder(), nil
+}
+
+// Helper functions for DFA wizard integration
+
+// convertActions converts wizard actions from adapter format to frontend format
+func convertActions(actions []core.StateAction) []WizardAction {
+	result := make([]WizardAction, len(actions))
+	for i, action := range actions {
+		result[i] = WizardAction{
+			ID:      action.ID,
+			Type:    string(action.Type),
+			Label:   action.Label,
+			Enabled: action.Enabled,
+			Primary: action.Primary,
+		}
+	}
+	return result
+}
+
+// convertFields converts wizard fields from adapter format to frontend format
+func convertFields(fields []core.UIField) []WizardField {
+	result := make([]WizardField, len(fields))
+	for i, field := range fields {
+		// Convert field options if available
+		var options interface{}
+		if len(field.Options) > 0 {
+			fieldOptions := make([]map[string]interface{}, len(field.Options))
+			for j, opt := range field.Options {
+				fieldOptions[j] = map[string]interface{}{
+					"id":    opt.ID,
+					"label": opt.Label,
+				}
+			}
+			options = fieldOptions
+		}
+		
+		result[i] = WizardField{
+			ID:       field.ID,
+			Type:     string(field.Type),
+			Label:    field.Label,
+			Required: field.Required,
+			Options:  options,
+		}
+	}
+	return result
+}

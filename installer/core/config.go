@@ -80,6 +80,7 @@ type Config struct {
 	Mode             Mode
 	InstallDir       string
 	Components       []Component
+	RequiredSpace    int64 // Required disk space in bytes
 	
 	// Resources
 	Assets       fs.FS
@@ -90,6 +91,11 @@ type Config struct {
 	UIConfig     *config.UIConfig
 	Theme        themes.Theme
 	ConfigFile   string
+	
+	// DFA Wizard Configuration
+	WizardProvider   string            // Name of the wizard provider to use
+	WizardOptions    map[string]interface{} // Options for the wizard provider
+	EnableThemeSelection bool          // Enable theme selection in wizard
 	
 	// Behavior
 	Rollback     RollbackStrategy

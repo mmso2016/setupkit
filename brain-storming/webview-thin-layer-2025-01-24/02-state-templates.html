@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SetupKit - {{.State}}</title>
+    <style>
+        :root {
+            --primary: {{.Theme.PrimaryColor}};
+            --secondary: {{.Theme.SecondaryColor}};
+            --background: {{.Theme.BackgroundColor}};
+            --text: {{.Theme.TextColor}};
+            --border-radius: {{.Theme.BorderRadius}};
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: {{.Theme.FontFamily}};
+            background: var(--background);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .wizard-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+        }
+        
+        .wizard-header {
+            padding: 20px 0;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+        }
+        
+        .wizard-stepper {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            position: relative;
+        }
+        
+        .step.active {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .step.completed::after {
+            content: '✓';
+            position: absolute;
+            right: -10px;
+            color: green;
+        }
+        
+        .wizard-content {
+            flex: 1;
+            padding: 40px 0;
+            overflow-y: auto;
+        }
+        
+        .wizard-footer {
+            padding: 20px 0;
+            border-top: 2px solid rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="wizard-container">
+        <!-- Header with Stepper -->
+        <div class="wizard-header">
+            <div class="wizard-stepper">
+                <div class="step {{if eq .State "welcome"}}active{{end}}">Welcome</div>
+                <div class="step {{if eq .State "mode_select"}}active{{end}}">Mode</div>
+                <div class="step {{if eq .State "license"}}active{{end}}">License</div>
+                <div class="step {{if eq .State "components"}}active{{end}}">Components</div>
+                <div class="step {{if eq .State "location"}}active{{end}}">Location</div>
+                <div class="step {{if eq .State "ready"}}active{{end}}">Ready</div>
+                <div class="step {{if eq .State "installing"}}active{{end}}">Installing</div>
+                <div class="step {{if eq .State "complete"}}active{{end}}">Complete</div>
+            </div>
+        </div>
+        
+        <!-- Dynamic Content based on State -->
+        <div class="wizard-content">
+            {{if eq .State "welcome"}}
+            <div class="welcome-content">
+                <h1>{{.AppConfig.name}}</h1>
+                <p>Version {{.AppConfig.version}}</p>
+                <p>Welcome to the {{.AppConfig.name}} Setup Wizard</p>
+                <p>This wizard will guide you through the installation process.</p>
+            </div>
+            
+            {{else if eq .State "components"}}
+            <div class="component-list">
+                <h2>Select Components</h2>
+                {{range .Data.components}}
+                <div class="component-item">
+                    <input type="checkbox" 
+                           id="comp-{{.ID}}" 
+                           {{if .Required}}disabled checked{{end}}
+                           {{if .Selected}}checked{{end}}
+                           onchange="selectComponent('{{.ID}}', this.checked)">
+                    <div class="component-info">
+                        <div>{{.Name}}</div>
+                        <div class="component-size">{{.Size}}</div>
+                        <div>{{.Description}}</div>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+        
+        <!-- Footer with Actions -->
+        <div class="wizard-footer">
+            <div style="display: flex; gap: 10px;">
+                {{range .Actions}}
+                {{if eq .id "back"}}
+                <button class="btn btn-secondary" 
+                        onclick="handleAction('{{.id}}')"
+                        {{if not .enabled}}disabled{{end}}>
+                    {{.label}}
+                </button>
+                {{end}}
+                {{end}}
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                {{range .Actions}}
+                {{if and (ne .id "back") (ne .id "cancel")}}
+                <button class="btn {{if .primary}}btn-primary{{else}}btn-secondary{{end}}" 
+                        onclick="handleAction('{{.id}}')"
+                        {{if not .enabled}}disabled{{end}}>
+                    {{.label}}
+                </button>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Minimal JavaScript for UI interaction -->
+    <script>
+        // Thin-layer JavaScript - only handles UI events and delegates to Go backend
+        
+        async function handleAction(action) {
+            try {
+                const data = collectStateData();
+                const result = await window.go.HandleAction(action, data);
+                
+                if (result.html) {
+                    document.body.innerHTML = result.html;
+                }
+            } catch (error) {
+                console.error('Action failed:', error);
+            }
+        }
+        
+        function collectStateData() {
+            const data = {};
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                if (input.id) {
+                    if (input.type === 'checkbox') {
+                        data[input.id] = input.checked;
+                    } else {
+                        data[input.id] = input.value;
+                    }
+                }
+            });
+            return data;
+        }
+    </script>
+</body>
+</html>

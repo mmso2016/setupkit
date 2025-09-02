@@ -17,6 +17,11 @@ type Installer struct {
 	ui       UI
 	platform PlatformInstaller
 	rollback *RollbackManager
+	
+	// DFA-based wizard support (optional)
+	wizardProvider WizardProvider
+	wizardAdapter  *WizardUIAdapter
+	useDFAWizard   bool
 }
 
 // PlatformInstaller interface for platform-specific operations
@@ -50,10 +55,64 @@ func RegisterUIFactory(factory UIFactory) {
 
 // New creates a new installer with the given configuration
 func New(config *Config) *Installer {
-	return &Installer{
-		config:   config,
-		rollback: NewRollbackManager(config.Rollback),
+	installer := &Installer{
+		config:       config,
+		rollback:     NewRollbackManager(config.Rollback),
+		useDFAWizard: false, // Default to legacy mode
 	}
+	
+	// Auto-enable DFA wizard if a wizard provider is set in config
+	if config.WizardProvider != "" {
+		if err := installer.EnableDFAWizard(config.WizardProvider); err != nil {
+			// Log error but don't fail - fall back to legacy mode
+			if config.Verbose {
+				fmt.Printf("Warning: Failed to enable DFA wizard: %v\n", err)
+			}
+		}
+	}
+	
+	return installer
+}
+
+// EnableDFAWizard enables the DFA-based wizard system
+func (i *Installer) EnableDFAWizard(providerName string) error {
+	// Get the wizard provider
+	provider, err := GetWizardProvider(providerName)
+	if err != nil {
+		return fmt.Errorf("failed to get wizard provider %s: %w", providerName, err)
+	}
+	
+	i.wizardProvider = provider
+	i.useDFAWizard = true
+	
+	return nil
+}
+
+// EnableExtendedWizardWithThemes enables an extended wizard with theme selection
+func (i *Installer) EnableExtendedWizardWithThemes(themes []string, defaultTheme string) error {
+	// Create extended provider with theme selection
+	mode := ModeCustom // Default to custom mode for extended wizard
+	if i.config.Mode == ModeCLI || i.config.Mode == ModeSilent {
+		mode = ModeExpress // Fallback to express for non-interactive modes
+	}
+	
+	provider := CreateExtendedProviderWithThemes(InstallMode(mode), themes, defaultTheme)
+	
+	i.wizardProvider = provider
+	i.useDFAWizard = true
+	i.config.EnableThemeSelection = true
+	
+	return nil
+}
+
+// GetWizardAdapter returns the wizard UI adapter (if DFA wizard is enabled)
+func (i *Installer) GetWizardAdapter() *WizardUIAdapter {
+	return i.wizardAdapter
+}
+
+// IsUsingDFAWizard returns true if the installer is using the DFA-based wizard
+func (i *Installer) IsUsingDFAWizard() bool {
+	return i.useDFAWizard
 }
 
 // Run executes the installer
@@ -65,6 +124,21 @@ func (i *Installer) Run(ctx context.Context) error {
 
 	// Store installer reference in context for UI to use
 	i.context.Metadata["installer"] = i
+
+	// Initialize DFA wizard if enabled
+	if i.useDFAWizard && i.wizardProvider != nil {
+		adapter := NewWizardUIAdapter(i.wizardProvider)
+		if err := adapter.Initialize(i.context); err != nil {
+			return fmt.Errorf("failed to initialize wizard adapter: %w", err)
+		}
+		i.wizardAdapter = adapter
+		
+		// Store wizard adapter in context for UI to use
+		i.context.Metadata["wizard_adapter"] = adapter
+		
+		i.context.Logger.Info("DFA-based wizard enabled", 
+			"provider", fmt.Sprintf("%T", i.wizardProvider))
+	}
 
 	// Create and initialize UI based on mode
 	if uiFactory == nil {

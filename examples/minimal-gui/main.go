@@ -12,16 +12,16 @@ import (
 )
 
 func main() {
-	// Simple installer example using the new DFA-based framework
+	// GUI installer example using DFA-based wizard
 	app, err := installer.New(
 		// Basic application information
-		installer.WithAppName("My Application"),
+		installer.WithAppName("SetupKit Demo"),
 		installer.WithVersion("1.0.0"),
-		installer.WithPublisher("Example Corp"),
-		installer.WithWebsite("https://example.com"),
+		installer.WithPublisher("SetupKit Team"),
+		installer.WithWebsite("https://github.com/mmso2016/setupkit"),
 		installer.WithLicense(`MIT License
 
-Copyright (c) 2025 Example Corp
+Copyright (c) 2025 SetupKit Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.`),
 
-		// Components to install
+		// Installation components
 		installer.WithComponents(
 			core.Component{
 				ID:       "core",
@@ -55,23 +55,40 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.`),
 			},
 			core.Component{
 				ID:          "examples",
-				Name:        "Example Projects",
+				Name:        "Example Projects", 
 				Description: "Sample projects and templates",
 				Size:        8 * 1024 * 1024, // 8 MB
 				Selected:    false,
 			},
 		),
 
-		// Enable GUI mode with DFA-based wizard (replaces hardcoded JavaScript navigation)
+		// Enable GUI mode with DFA-based wizard
+		// This replaces hardcoded JavaScript navigation with DFA state management
 		installer.WithMode(installer.ModeGUI),
 		installer.WithDFAWizard(),
+		
+		// Set install directory
+		installer.WithInstallDir("C:\\Program Files\\SetupKit Demo"),
+		
+		// Enable dry run for demo
+		installer.WithDryRun(true),
+		
+		// Enable verbose logging
+		installer.WithVerbose(true),
 	)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Run the installer with DFA wizard
+	// Show DFA wizard status
+	if app.IsUsingDFAWizard() {
+		log.Println("✅ DFA Wizard enabled - GUI uses DFA instead of hardcoded JavaScript!")
+	} else {
+		log.Println("❌ Using legacy wizard")
+	}
+
+	// Run the installer with DFA-based GUI wizard
 	err = app.Run()
 	if err != nil {
 		log.Fatal(err)

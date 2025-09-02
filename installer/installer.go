@@ -173,6 +173,51 @@ func WithElevationStrategy(strategy core.ElevationStrategy) Option {
 	}
 }
 
+// WithWizardProvider enables DFA-based wizard with the specified provider
+func WithWizardProvider(providerName string) Option {
+	return func(c *Config) error {
+		c.WizardProvider = providerName
+		return nil
+	}
+}
+
+// WithDFAWizard enables the standard DFA wizard (express mode)
+func WithDFAWizard() Option {
+	return WithWizardProvider("standard-express")
+}
+
+// WithCustomDFAWizard enables the standard DFA wizard (custom mode)
+func WithCustomDFAWizard() Option {
+	return WithWizardProvider("standard-custom")
+}
+
+// WithAdvancedDFAWizard enables the standard DFA wizard (advanced mode) 
+func WithAdvancedDFAWizard() Option {
+	return WithWizardProvider("standard-advanced")
+}
+
+// WithThemeSelection enables theme selection in the wizard
+func WithThemeSelection(enabled bool) Option {
+	return func(c *Config) error {
+		c.EnableThemeSelection = enabled
+		return nil
+	}
+}
+
+// WithExtendedWizard enables an extended wizard with theme selection
+func WithExtendedWizard(themes []string, defaultTheme string) Option {
+	return func(c *Config) error {
+		c.WizardProvider = "extended"
+		c.EnableThemeSelection = true
+		if c.WizardOptions == nil {
+			c.WizardOptions = make(map[string]interface{})
+		}
+		c.WizardOptions["themes"] = themes
+		c.WizardOptions["default_theme"] = defaultTheme
+		return nil
+	}
+}
+
 // WithDryRun enables or disables dry run mode
 func WithDryRun(dryRun bool) Option {
 	return func(c *Config) error {
@@ -378,6 +423,26 @@ func (i *Installer) SetSelectedComponents(components []Component) {
 // SetInstallPath sets the installation directory
 func (i *Installer) SetInstallPath(path string) {
 	i.core.SetInstallPath(path)
+}
+
+// IsUsingDFAWizard returns true if the installer is using the DFA-based wizard
+func (i *Installer) IsUsingDFAWizard() bool {
+	return i.core.IsUsingDFAWizard()
+}
+
+// GetWizardAdapter returns the wizard UI adapter (if DFA wizard is enabled)
+func (i *Installer) GetWizardAdapter() *core.WizardUIAdapter {
+	return i.core.GetWizardAdapter()
+}
+
+// EnableDFAWizard enables the DFA-based wizard system
+func (i *Installer) EnableDFAWizard(providerName string) error {
+	return i.core.EnableDFAWizard(providerName)
+}
+
+// EnableExtendedWizardWithThemes enables an extended wizard with theme selection
+func (i *Installer) EnableExtendedWizardWithThemes(themes []string, defaultTheme string) error {
+	return i.core.EnableExtendedWizardWithThemes(themes, defaultTheme)
 }
 
 // Utility functions exported for backward compatibility

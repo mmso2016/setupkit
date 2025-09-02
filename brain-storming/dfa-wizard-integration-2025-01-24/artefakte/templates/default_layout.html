@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Wizard.Title}} Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .wizard-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 900px;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Stepper/Header Section */
+        .wizard-header {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .wizard-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        /* Content Section */
+        .wizard-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Footer/Navigation Section */
+        .wizard-footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="theme-{{.UI.Theme}}">
+    <div class="wizard-container">
+        <!-- Header with Stepper -->
+        <div class="wizard-header">
+            <h1 class="wizard-title">{{.Wizard.Title}}</h1>
+            {{if .UI.ShowStepper}}
+            <div class="stepper">
+                {{range .Wizard.Steps}}
+                <div class="step {{stepClass .State}}" data-step="{{.ID}}">
+                    <div class="step-circle"></div>
+                    <div class="step-label">{{.Name}}</div>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="wizard-content">
+            <div class="step-content" id="step-content">
+                {{.Step.Content}}
+            </div>
+        </div>
+        
+        <!-- Footer with Navigation -->
+        <div class="wizard-footer">
+            <div class="nav-buttons nav-left">
+                {{if .Navigation.CanCancel}}
+                <button type="button" class="btn btn-danger" onclick="cancelWizard()">
+                    {{.Navigation.CancelLabel}}
+                </button>
+                {{end}}
+            </div>
+            
+            <div class="nav-buttons nav-right">
+                {{if .Navigation.CanGoBack}}
+                <button type="button" class="btn btn-secondary" onclick="goBack()">
+                    ← {{.Navigation.BackLabel}}
+                </button>
+                {{end}}
+                
+                {{if .Navigation.CanGoNext}}
+                <button type="button" class="btn btn-primary" onclick="goNext()">
+                    {{.Navigation.NextLabel}} →
+                </button>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
