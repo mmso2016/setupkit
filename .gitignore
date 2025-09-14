@@ -64,3 +64,4 @@ __debug_bin
 .env.local
 /examples/gui/frontend/package.json.md5
 /_old_examples
+/brain-storming
