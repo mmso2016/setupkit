@@ -16,8 +16,10 @@ type Mode int
 const (
 	// ModeAuto automatically detects the best mode (GUI if available, otherwise CLI)
 	ModeAuto Mode = iota
-	// ModeGUI forces GUI mode
+	// ModeGUI forces native WebView GUI mode
 	ModeGUI
+	// ModeBrowser forces browser-based GUI mode
+	ModeBrowser
 	// ModeCLI forces CLI mode
 	ModeCLI
 	// ModeSilent runs without any user interaction

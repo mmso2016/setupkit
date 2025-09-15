@@ -13,8 +13,10 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/mmso2016/setupkit/pkg/installer/controller"
 	"github.com/mmso2016/setupkit/pkg/installer/core"
 	"github.com/mmso2016/setupkit/pkg/installer/ui"
+	"github.com/mmso2016/setupkit/pkg/installer/ui/cli"
 	"gopkg.in/yaml.v3"
 )
 
@@ -143,7 +145,7 @@ type ProfileYAML struct {
 func main() {
 	// Command line flags
 	var (
-		mode         = flag.String("mode", "", "UI mode: gui, cli, auto (overrides config)")
+		mode         = flag.String("mode", "", "UI mode: gui, browser, cli, auto (overrides config)")
 		installDir   = flag.String("dir", "", "Installation directory (overrides config)")
 		silent       = flag.Bool("silent", false, "Silent installation")
 		configFile   = flag.String("config", "", "YAML configuration file (if not specified, uses embedded config)")
@@ -220,29 +222,82 @@ func main() {
 	})
 	ctx.Metadata["installer"] = installer
 
+	// Create DFA controller - ALL UI modes use the same DFA approach
+	dfaController := controller.NewInstallerController(config, installer)
+
 	// Determine UI mode
 	uiMode := determineUIMode(yamlConfig.Mode, yamlConfig.Unattended)
-	
-	// Create UI
+
+	// Create DFA-controlled UI based on mode
 	fmt.Printf("Starting installation with %s interface...\n", getModeName(uiMode))
-	setupUI, err := ui.CreateUI(uiMode)
-	if err != nil {
-		log.Fatalf("Failed to create UI: %v", err)
+	var installerView controller.InstallerView
+	switch uiMode {
+	case core.ModeCLI:
+		cliUI := cli.NewDFA()
+		if err := cliUI.Initialize(ctx); err != nil {
+			log.Fatalf("Failed to initialize CLI UI: %v", err)
+		}
+		cliUI.SetController(dfaController)
+		installerView = cliUI
+
+	case core.ModeGUI:
+		guiUI := ui.NewWebViewGUI()
+		if guiInitializer, ok := guiUI.(interface{ Initialize(*core.Context) error }); ok {
+			if err := guiInitializer.Initialize(ctx); err != nil {
+				log.Fatalf("Failed to initialize GUI UI: %v", err)
+			}
+		}
+		if setController, ok := guiUI.(interface{ SetController(*controller.InstallerController) }); ok {
+			setController.SetController(dfaController)
+		}
+		installerView = guiUI
+
+	case core.ModeBrowser:
+		browserUI := ui.NewGUIDFA()
+		if browserInitializer, ok := browserUI.(interface{ Initialize(*core.Context) error }); ok {
+			if err := browserInitializer.Initialize(ctx); err != nil {
+				log.Fatalf("Failed to initialize browser UI: %v", err)
+			}
+		}
+		if setController, ok := browserUI.(interface{ SetController(*controller.InstallerController) }); ok {
+			setController.SetController(dfaController)
+		}
+		installerView = browserUI
+
+	case core.ModeSilent:
+		silentUI := ui.NewSilentUIDFA()
+		if err := silentUI.Initialize(ctx); err != nil {
+			log.Fatalf("Failed to initialize Silent UI: %v", err)
+		}
+		silentUI.SetController(dfaController)
+		installerView = silentUI
+
+	case core.ModeAuto:
+		// Auto-detect best mode (default to CLI)
+		cliUI := cli.NewDFA()
+		if err := cliUI.Initialize(ctx); err != nil {
+			log.Fatalf("Failed to initialize CLI UI: %v", err)
+		}
+		cliUI.SetController(dfaController)
+		installerView = cliUI
+
+	default:
+		log.Fatalf("Unknown UI mode: %v", uiMode)
 	}
 
-	// Initialize UI
-	if err := setupUI.Initialize(ctx); err != nil {
-		log.Fatalf("Failed to initialize UI: %v", err)
-	}
+	// Set the UI view on the DFA controller
+	dfaController.SetView(installerView)
 
-	// Run installer
-	if err := setupUI.Run(); err != nil {
+	// Start the DFA controller - ALL modes use the same DFA approach
+	if err := dfaController.Start(); err != nil {
 		log.Fatalf("Installation failed: %v", err)
 	}
 
 	// Cleanup
-	if err := setupUI.Shutdown(); err != nil {
-		log.Printf("Shutdown warning: %v", err)
+	if shutdownable, ok := installerView.(interface{ Shutdown() error }); ok {
+		if err := shutdownable.Shutdown(); err != nil {
+			log.Printf("Shutdown warning: %v", err)
+		}
 	}
 
 	fmt.Printf("\n%s installation completed successfully! 🎉\n", config.AppName)
@@ -419,10 +474,12 @@ func determineUIMode(mode string, unattended bool) core.Mode {
 	if unattended {
 		return core.ModeSilent
 	}
-	
+
 	switch mode {
 	case "gui":
-		return core.ModeGUI
+		return core.ModeGUI  // Native WebView GUI
+	case "browser":
+		return core.ModeBrowser  // Browser-based UI (need to add this enum)
 	case "cli":
 		return core.ModeCLI
 	case "silent":
@@ -439,6 +496,8 @@ func getModeName(mode core.Mode) string {
 	switch mode {
 	case core.ModeGUI:
 		return "GUI"
+	case core.ModeBrowser:
+		return "Browser"
 	case core.ModeCLI:
 		return "CLI"
 	case core.ModeSilent:

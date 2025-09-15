@@ -18,7 +18,9 @@ func init() {
 func CreateUI(mode core.Mode) (core.UI, error) {
 	switch mode {
 	case core.ModeGUI:
-		return createGUI()
+		return createWebViewGUI()  // Lorca WebView GUI
+	case core.ModeBrowser:
+		return createGUIDFA() // Browser-based GUI
 	case core.ModeCLI:
 		return createCLI()
 	case core.ModeSilent:
@@ -34,12 +36,12 @@ func CreateUI(mode core.Mode) (core.UI, error) {
 func detectBestUI() (core.UI, error) {
 	// Check if we're in a GUI environment
 	if HasDisplay() {
-		// Try to create GUI
-		ui, err := createGUI()
+		// Try to create WebView GUI
+		ui, err := createWebViewGUI()
 		if err == nil {
 			return ui, nil
 		}
-		// Fall back to CLI if GUI fails
+		// Fall back to CLI if WebView GUI fails
 	}
 
 	// Default to CLI
@@ -61,6 +63,11 @@ func HasDisplay() bool {
 // createSilent creates a silent/headless UI
 func createSilent() (core.UI, error) {
 	return NewSilentUIDFA(), nil
+}
+
+// createWebViewGUI creates a WebView-based GUI using Lorca
+func createWebViewGUI() (core.UI, error) {
+	return NewWebViewAdapter(), nil
 }
 
 // NewSilentUI is defined in silent.go

@@ -1,0 +1,74 @@
+{
+    "go.useLanguageServer": true,
+    "go.lintOnSave": "package",
+    "go.vetOnSave": "package",
+    "go.formatOnSave": true,
+    "go.formatTool": "goimports",
+    "go.lintTool": "golangci-lint",
+    "go.buildOnSave": "off",
+    "go.installDependenciesWhenBuilding": false,
+    "go.toolsManagement.checkForUpdates": "local",
+    "go.testFlags": ["-v", "-race"],
+    "go.coverOnSave": false,
+    "go.coverOnSingleTest": true,
+    "go.coverOnTestPackage": true,
+    "go.coverageDecorator": {
+        "type": "gutter",
+        "coveredHighlightColor": "rgba(64,128,64,0.5)",
+        "uncoveredHighlightColor": "rgba(128,64,64,0.25)",
+        "coveredGutterStyle": "blockgreen",
+        "uncoveredGutterStyle": "blockred"
+    },
+    "go.alternateTools": {
+        "go": "go",
+        "gofmt": "goimports",
+        "golint": "golangci-lint"
+    },
+    "go.gocodeAutoBuild": true,
+    "go.gocodePackageLookupMode": "go",
+    "go.inferGopath": false,
+    "go.gopath": "",
+    "go.goroot": "",
+    "go.buildTags": "",
+    "go.testTags": "",
+    "go.enableCodeLens": {
+        "references": true,
+        "runtest": true
+    },
+    "go.addTags": {
+        "tags": "json",
+        "options": "json=omitempty",
+        "promptForTags": false,
+        "transform": "snakecase",
+        "template": ""
+    },
+    "go.removeTags": {
+        "tags": "",
+        "options": "",
+        "promptForTags": false
+    },
+    "go.playground": {
+        "openbrowser": true,
+        "share": true
+    },
+    "files.exclude": {
+        "**/bin": true,
+        "**/coverage": true,
+        "**/*.test": true,
+        "**/*.out": true
+    },
+    "files.watcherExclude": {
+        "**/bin/**": true,
+        "**/coverage/**": true,
+        "**/*.test": true,
+        "**/*.out": true
+    },
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "editor.formatOnSave": true,
+    "editor.rulers": [100, 120],
+    "editor.tabSize": 4,
+    "editor.insertSpaces": false,
+    "editor.detectIndentation": false
+}

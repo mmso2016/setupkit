@@ -53,11 +53,21 @@ func Build() error {
 	// Build ldflags for embedded version
 	ldflags := fmt.Sprintf("-s -w -X main.Version=%s -X main.BuildDate=%s", version, buildDate)
 
+	// Add Windows-specific ldflags for webview
+	if runtime.GOOS == "windows" {
+		ldflags += " -H windowsgui"
+	}
+
 	// Build embedded installer
 	output := filepath.Join(binDir, "setupkit-installer-demo"+binExt)
 	args := []string{"build", "-v", "-ldflags", ldflags, "-o", output, "./examples/installer-demo"}
 
-	if err := sh.RunV("go", args...); err != nil {
+	// Set environment variables for CGO (required for webview)
+	env := map[string]string{
+		"CGO_ENABLED": "1",
+	}
+
+	if err := sh.RunWithV(env, "go", args...); err != nil {
 		return fmt.Errorf("build failed: %w", err)
 	}
 

@@ -1,0 +1,19 @@
+{
+    "recommendations": [
+        "golang.go",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.makefile-tools",
+        "streetsidesoftware.code-spell-checker",
+        "yzhang.markdown-all-in-one",
+        "davidanson.vscode-markdownlint",
+        "ms-vscode.test-adapter-converter",
+        "hbenl.vscode-test-explorer",
+        "formulahendry.code-runner",
+        "ms-vscode-remote.remote-containers"
+    ],
+    "unwantedRecommendations": [
+        "ms-vscode.cpptools",
+        "ms-python.python"
+    ]
+}

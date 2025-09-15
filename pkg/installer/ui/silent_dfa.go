@@ -20,27 +20,24 @@ func NewSilentUIDFA() *SilentUIDFA {
 	return &SilentUIDFA{}
 }
 
-// Initialize sets up the Silent UI with context and controller
+// Initialize sets up the Silent UI with context
 func (s *SilentUIDFA) Initialize(ctx *core.Context) error {
 	s.context = ctx
 	s.config = ctx.Config
-
-	// Get installer from context
-	installer, ok := ctx.Metadata["installer"].(*core.Installer)
-	if !ok {
-		return fmt.Errorf("no installer found in context")
-	}
-
-	// Create DFA controller
-	s.controller = controller.NewInstallerController(ctx.Config, installer)
-	s.controller.SetView(s)
-
-	s.context.Logger.Info("Starting DFA-controlled silent installation")
+	s.context.Logger.Info("Silent UI initialized - waiting for controller assignment")
 	return nil
+}
+
+// SetController assigns the shared DFA controller to this UI
+func (s *SilentUIDFA) SetController(ctrl *controller.InstallerController) {
+	s.controller = ctrl
 }
 
 // Run starts the DFA-controlled silent installation flow
 func (s *SilentUIDFA) Run() error {
+	if s.controller == nil {
+		return fmt.Errorf("no controller assigned - call SetController() first")
+	}
 	s.context.Logger.Info("Starting DFA-controlled silent installation flow")
 	return s.controller.Start()
 }

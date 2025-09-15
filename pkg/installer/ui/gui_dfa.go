@@ -47,7 +47,7 @@ func createGUIDFA() (core.UI, error) {
 	return &webViewUIDFA{}, nil
 }
 
-// Initialize sets up the GUI with context and controller
+// Initialize sets up the GUI with context
 func (w *webViewUIDFA) Initialize(ctx *core.Context) error {
 	w.context = ctx
 	w.renderer = html.NewSSRRenderer()
@@ -56,24 +56,23 @@ func (w *webViewUIDFA) Initialize(ctx *core.Context) error {
 	w.finished = make(chan struct{})
 	w.userInputs = make(map[string]interface{})
 
-	// Get installer from context
-	installer, ok := ctx.Metadata["installer"].(*core.Installer)
-	if !ok {
-		return fmt.Errorf("no installer found in context")
-	}
-
-	// Create DFA controller
-	w.controller = controller.NewInstallerController(ctx.Config, installer)
-	w.controller.SetView(w)
-
 	// Setup HTTP server
 	w.setupHTTPServer()
 
 	return nil
 }
 
+// SetController assigns the shared DFA controller to this UI
+func (w *webViewUIDFA) SetController(ctrl *controller.InstallerController) {
+	w.controller = ctrl
+}
+
 // Run starts the DFA-controlled installation flow
 func (w *webViewUIDFA) Run() error {
+	if w.controller == nil {
+		return fmt.Errorf("no controller assigned - call SetController() first")
+	}
+
 	// Start HTTP server in goroutine
 	go func() {
 		if err := w.server.ListenAndServe(); err != http.ErrServerClosed {

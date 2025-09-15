@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm:*)",
+      "Bash(mage:*)",
+      "Bash(bin/setupkit-html-ssr-demo.exe:*)",
+      "Bash(go get:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(.binsetupkit-webview-demo.exe --help)",
+      "Bash(./bin/setupkit-webview-demo.exe:*)",
+      "Bash(go mod:*)",
+      "Bash(go build:*)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

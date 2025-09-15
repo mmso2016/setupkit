@@ -41,6 +41,7 @@ help:
 	@echo "  all          - Clean, test and build embedded installer"
 	@echo "  build        - Build embedded installer with all assets"
 	@echo "  build-custom-state-demo - Build custom state demo"
+	@echo "  build-webview - Build WebView2 GUI demo (Windows native)"
 	@echo "  build-all    - Build all demo applications"
 	@echo "  clean        - Clean build artifacts"
 	@echo ""
@@ -57,9 +58,10 @@ help:
 	@echo ""
 	@echo "Run Targets:"
 	@echo "  run          - Run embedded installer (auto mode)"
-	@echo "  run-gui      - Run installer (GUI mode)"
+	@echo "  run-browser  - Run installer (browser mode)"
 	@echo "  run-cli      - Run installer (CLI mode)"
 	@echo "  run-silent   - Run installer (silent mode)"
+	@echo "  run-webview  - Run WebView GUI demo"
 	@echo "  run-custom-state-demo - Run database configuration demo (silent mode)"
 	@echo "  run-custom-state-demo-cli - Run database configuration demo (CLI mode)"
 	@echo "  run-custom-state-demo-auto - Run database configuration demo (auto mode)"
@@ -97,9 +99,20 @@ build-custom-state-demo:
 	@echo "✅ Custom state demo built: $(BIN_DIR)$(PATH_SEP)setupkit-custom-state-demo$(BINARY_EXT)"
 	@echo "✅ Database configuration demo ready!"
 
+# Build WebView demo
+.PHONY: build-webview
+build-webview:
+	@echo "Building SetupKit WebView2 GUI demo..."
+	@echo "Uses native Windows WebView2 (Microsoft Edge) component."
+	@echo ""
+	@$(MKDIR) $(BIN_DIR)
+	go build $(GOFLAGS) -tags="!nogui" -o $(BIN_DIR)$(PATH_SEP)setupkit-webview-demo$(BINARY_EXT) $(INSTALLER_DIR)
+	@echo "✅ WebView demo built: $(BIN_DIR)$(PATH_SEP)setupkit-webview-demo$(BINARY_EXT)"
+	@echo "✅ WebView GUI installer ready!"
+
 # Build all demo applications
 .PHONY: build-all
-build-all: build build-custom-state-demo
+build-all: build build-custom-state-demo build-webview
 
 # Test targets
 .PHONY: test
@@ -176,12 +189,12 @@ run: build
 	@echo ""
 	$(BIN_DIR)$(PATH_SEP)setupkit-installer-demo$(BINARY_EXT)
 
-.PHONY: run-gui
-run-gui: build
-	@echo "Starting embedded installer (GUI mode)..."
+.PHONY: run-browser
+run-browser: build
+	@echo "Starting embedded installer (browser mode)..."
 	@echo "Opens browser-based interface with embedded assets"
 	@echo ""
-	$(BIN_DIR)$(PATH_SEP)setupkit-installer-demo$(BINARY_EXT) -mode=gui
+	$(BIN_DIR)$(PATH_SEP)setupkit-installer-demo$(BINARY_EXT) -mode=browser
 
 .PHONY: run-cli
 run-cli: build
@@ -196,6 +209,13 @@ run-silent: build
 	@echo "Unattended installation with embedded assets"
 	@echo ""
 	$(BIN_DIR)$(PATH_SEP)setupkit-installer-demo$(BINARY_EXT) -silent -profile=minimal
+
+.PHONY: run-webview
+run-webview: build-webview
+	@echo "Starting WebView2 GUI installer..."
+	@echo "Uses native Windows WebView2 (no additional dependencies)"
+	@echo ""
+	$(BIN_DIR)$(PATH_SEP)setupkit-webview-demo$(BINARY_EXT) -mode=gui
 
 # Run custom state demo
 .PHONY: run-custom-state-demo

@@ -1,0 +1,238 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Installer Demo - GUI Mode",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-mode=gui", "-profile=minimal"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo",
+        "order": 1
+      }
+    },
+    {
+      "name": "Installer Demo - Browser Mode",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-mode=browser", "-profile=minimal"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo",
+        "order": 2
+      }
+    },
+    {
+      "name": "Installer Demo - CLI Mode",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-mode=cli", "-profile=minimal"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo",
+        "order": 3
+      }
+    },
+    {
+      "name": "Installer Demo - Silent Mode",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-mode=silent", "-profile=minimal"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo",
+        "order": 4
+      }
+    },
+    {
+      "name": "Installer Demo - Auto Mode",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-mode=auto", "-profile=minimal"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo",
+        "order": 5
+      }
+    },
+    {
+      "name": "Custom State Demo - GUI Mode",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/custom-state-demo",
+      "args": ["-mode=gui"],
+      "presentation": {
+        "group": "custom-state-demo",
+        "order": 1
+      }
+    },
+    {
+      "name": "Custom State Demo - Browser Mode",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/custom-state-demo",
+      "args": ["-mode=browser"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "custom-state-demo",
+        "order": 2
+      }
+    },
+    {
+      "name": "Custom State Demo - CLI Mode",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/custom-state-demo",
+      "args": ["-mode=cli"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "custom-state-demo",
+        "order": 3
+      }
+    },
+    {
+      "name": "Custom State Demo - Silent Mode",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/custom-state-demo",
+      "args": ["-mode=silent"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "custom-state-demo",
+        "order": 4
+      }
+    },
+    {
+      "name": "Custom State Demo - Auto Mode",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/custom-state-demo",
+      "args": ["-mode=auto"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "custom-state-demo",
+        "order": 5
+      }
+    },
+    {
+      "name": "Custom State Demo - Help",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/custom-state-demo",
+      "args": ["--help"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "custom-state-demo",
+        "order": 6
+      }
+    },
+    {
+      "name": "Installer Demo - Full Profile GUI",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-mode=gui", "-profile=full"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo-profiles",
+        "order": 1
+      }
+    },
+    {
+      "name": "Installer Demo - Developer Profile GUI",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-mode=gui", "-profile=developer"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo-profiles",
+        "order": 2
+      }
+    },
+    {
+      "name": "Installer Demo - Custom Directory",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-mode=gui", "-dir=C:\\\\Temp\\\\CustomInstall"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo-custom",
+        "order": 1
+      }
+    },
+    {
+      "name": "Custom State Demo - Custom Directory",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/custom-state-demo",
+      "args": ["-mode=gui", "-dir=C:\\\\Temp\\\\CustomDBApp"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "custom-state-demo-custom",
+        "order": 1
+      }
+    },
+    {
+      "name": "Installer Demo - External Config",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-mode=gui", "-config=custom-installer.yml"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo-custom",
+        "order": 2
+      }
+    },
+    {
+      "name": "Installer Demo - List Profiles",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-list-profiles"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo-util",
+        "order": 1
+      }
+    },
+    {
+      "name": "Installer Demo - Unattended",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/examples/installer-demo",
+      "args": ["-unattended", "-profile=minimal"],
+      "console": "integratedTerminal",
+      "presentation": {
+        "group": "installer-demo-auto",
+        "order": 1
+      }
+    }
+  ]
+}

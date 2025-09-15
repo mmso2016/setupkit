@@ -18,7 +18,7 @@ import (
 func main() {
 	// Command line flags
 	var (
-		mode       = flag.String("mode", "auto", "UI mode: gui, cli, silent, auto")
+		mode       = flag.String("mode", "auto", "UI mode: gui, browser, cli, silent, auto")
 		installDir = flag.String("dir", "", "Installation directory (overrides default temp dir)")
 		help       = flag.Bool("help", false, "Show this help message")
 	)
@@ -39,9 +39,10 @@ func main() {
 		fmt.Println("Flow: Welcome → License → Components → Install Path → DB Config → Summary → Progress → Complete")
 		fmt.Println()
 		fmt.Println("Examples:")
+		fmt.Printf("  %s -mode=gui          # Native WebView GUI mode\n", os.Args[0])
+		fmt.Printf("  %s -mode=browser      # Browser-based interface\n", os.Args[0])
 		fmt.Printf("  %s -mode=cli          # Interactive CLI mode\n", os.Args[0])
 		fmt.Printf("  %s -mode=silent       # Automated silent mode\n", os.Args[0])
-		fmt.Printf("  %s -mode=gui          # Browser-based GUI mode\n", os.Args[0])
 		fmt.Printf("  %s -dir=\"./install\"   # Custom install directory\n", os.Args[0])
 		return
 	}
@@ -133,14 +134,30 @@ func main() {
 		installerView = cliUI
 
 	case "gui":
-		fmt.Println("Starting GUI mode (browser-based)...")
-		guiUI := ui.NewGUIDFA()
+		fmt.Println("Starting native WebView GUI mode...")
+		guiUI := ui.NewWebViewGUI()
 		if guiInitializer, ok := guiUI.(interface{ Initialize(*core.Context) error }); ok {
 			if err := guiInitializer.Initialize(context); err != nil {
 				log.Fatalf("Failed to initialize GUI UI: %v", err)
 			}
 		}
+		if setController, ok := guiUI.(interface{ SetController(*controller.InstallerController) }); ok {
+			setController.SetController(dfaController)
+		}
 		installerView = guiUI
+
+	case "browser":
+		fmt.Println("Starting browser mode...")
+		browserUI := ui.NewGUIDFA()
+		if browserInitializer, ok := browserUI.(interface{ Initialize(*core.Context) error }); ok {
+			if err := browserInitializer.Initialize(context); err != nil {
+				log.Fatalf("Failed to initialize browser UI: %v", err)
+			}
+		}
+		if setController, ok := browserUI.(interface{ SetController(*controller.InstallerController) }); ok {
+			setController.SetController(dfaController)
+		}
+		installerView = browserUI
 
 	case "silent":
 		fmt.Println("Starting silent mode...")
@@ -162,42 +179,55 @@ func main() {
 		installerView = cliUI
 
 	default:
-		log.Fatalf("Unknown mode: %s. Use cli, gui, silent, or auto", *mode)
+		log.Fatalf("Unknown mode: %s. Use gui, browser, cli, silent, or auto", *mode)
 	}
 
 	// Set the UI view on the DFA controller
 	dfaController.SetView(installerView)
 
-	// Start the DFA controller - ALL modes use the same DFA approach
-	if err := dfaController.Start(); err != nil {
-		log.Fatalf("Installation failed: %v", err)
-	}
-
-	// For silent mode ONLY, automatically navigate through states for demo purposes
-	if strings.ToLower(*mode) == "silent" {
-		fmt.Println("\n--- Automatically navigating through installer states ---")
-		states := []string{"License", "Components", "Install Path", "Database Configuration", "Summary", "Progress", "Complete"}
-		for i, stateName := range states {
-			fmt.Printf("\n[%d/%d] Proceeding to: %s\n", i+1, len(states), stateName)
-
-			if err := dfaController.Next(); err != nil {
-				log.Printf("Navigation to %s failed: %v", stateName, err)
-				break
-			}
-
-			// Longer delay for Progress state to let installation complete
-			if stateName == "Progress" {
-				fmt.Println("Installation is running...")
-				time.Sleep(2 * time.Second) // Give time for actual installation
-			} else {
-				time.Sleep(500 * time.Millisecond)
-			}
+	// Handle different UI modes
+	if strings.ToLower(*mode) == "gui" || strings.ToLower(*mode) == "browser" {
+		// For GUI/browser modes, use the UI's Run() method which handles the interface and waits
+		modeName := "GUI"
+		if strings.ToLower(*mode) == "browser" {
+			modeName = "browser"
 		}
-		fmt.Println("\n--- Installation flow demonstration completed ---")
+		fmt.Printf("Starting %s installation...\n", modeName)
+		if err := installerView.(interface{ Run() error }).Run(); err != nil {
+			log.Fatalf("%s installation failed: %v", modeName, err)
+		}
 	} else {
-		// For CLI/GUI modes, the UI will handle user interaction
-		// The DFA controller Start() method will manage the flow
-		fmt.Println("Installation started. Use the UI to navigate through the states.")
+		// Start the DFA controller for CLI/Silent modes
+		if err := dfaController.Start(); err != nil {
+			log.Fatalf("Installation failed: %v", err)
+		}
+
+		// For silent mode ONLY, automatically navigate through states for demo purposes
+		if strings.ToLower(*mode) == "silent" {
+			fmt.Println("\n--- Automatically navigating through installer states ---")
+			states := []string{"License", "Components", "Install Path", "Database Configuration", "Summary", "Progress", "Complete"}
+			for i, stateName := range states {
+				fmt.Printf("\n[%d/%d] Proceeding to: %s\n", i+1, len(states), stateName)
+
+				if err := dfaController.Next(); err != nil {
+					log.Printf("Navigation to %s failed: %v", stateName, err)
+					break
+				}
+
+				// Longer delay for Progress state to let installation complete
+				if stateName == "Progress" {
+					fmt.Println("Installation is running...")
+					time.Sleep(2 * time.Second) // Give time for actual installation
+				} else {
+					time.Sleep(500 * time.Millisecond)
+				}
+			}
+			fmt.Println("\n--- Installation flow demonstration completed ---")
+		} else {
+			// For CLI modes, the UI will handle user interaction
+			// The DFA controller Start() method will manage the flow
+			fmt.Println("Installation started. Use the UI to navigate through the states.")
+		}
 	}
 
 	// Demo finished

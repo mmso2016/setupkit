@@ -1,0 +1,201 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build All Examples",
+            "type": "shell",
+            "command": "mage",
+            "args": ["BuildAll"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Build Installer Demo",
+            "type": "shell",
+            "command": "mage",
+            "args": ["Build"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Build Custom State Demo",
+            "type": "shell",
+            "command": "mage",
+            "args": ["BuildCustomStateDemo"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Clean Build Artifacts",
+            "type": "shell",
+            "command": "mage",
+            "args": ["Clean"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "mage",
+            "args": ["Test"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Run Tests (Verbose)",
+            "type": "shell",
+            "command": "mage",
+            "args": ["TestVerbose"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Run Tests with Race Detector",
+            "type": "shell",
+            "command": "mage",
+            "args": ["TestRace"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Generate Coverage Report",
+            "type": "shell",
+            "command": "mage",
+            "args": ["Coverage"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Format Code",
+            "type": "shell",
+            "command": "mage",
+            "args": ["Fmt"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Run Go Vet",
+            "type": "shell",
+            "command": "mage",
+            "args": ["Vet"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Run Linters",
+            "type": "shell",
+            "command": "mage",
+            "args": ["Lint"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "Tidy Dependencies",
+            "type": "shell",
+            "command": "mage",
+            "args": ["Tidy"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Show Version Info",
+            "type": "shell",
+            "command": "mage",
+            "args": ["Version"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Clean Installation Directories",
+            "type": "shell",
+            "command": "mage",
+            "args": ["CleanInstall"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        }
+    ]
+}
