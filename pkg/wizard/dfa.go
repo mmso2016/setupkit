@@ -5,6 +5,7 @@ package wizard
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -19,18 +20,67 @@ const (
 	StateFinal   State = "final"
 )
 
+// MainState represents a top-level screen state  
+type MainState string
+
+// SubState represents a sub-state within a main state
+type SubState string
+
+// CompositeState represents the current hierarchical state
+type CompositeState struct {
+	Main MainState `json:"main"`
+	Sub  SubState  `json:"sub"`
+}
+
+// String returns string representation of composite state
+func (cs CompositeState) String() string {
+	if cs.Sub == "" {
+		return string(cs.Main)
+	}
+	return fmt.Sprintf("%s.%s", cs.Main, cs.Sub)
+}
+
+// ToState converts CompositeState to legacy State for compatibility
+func (cs CompositeState) ToState() State {
+	return State(cs.String())
+}
+
+// ParseCompositeState parses a string into CompositeState
+func ParseCompositeState(s string) CompositeState {
+	parts := strings.Split(s, ".")
+	if len(parts) == 1 {
+		return CompositeState{Main: MainState(parts[0]), Sub: ""}
+	}
+	return CompositeState{Main: MainState(parts[0]), Sub: SubState(parts[1])}
+}
+
 // Action represents an action that can trigger a transition
 type Action string
 
 // Common actions
 const (
 	ActionNext     Action = "next"
-	ActionBack     Action = "back"
+	ActionBack     Action = "back" 
 	ActionCancel   Action = "cancel"
 	ActionSkip     Action = "skip"
 	ActionRetry    Action = "retry"
 	ActionValidate Action = "validate"
 	ActionSave     Action = "save"
+)
+
+// SubAction represents actions within a sub-state
+type SubAction string
+
+// Common sub-actions  
+const (
+	SubActionSelect   SubAction = "select"
+	SubActionDeselect SubAction = "deselect"
+	SubActionInput    SubAction = "input"
+	SubActionFocus    SubAction = "focus"
+	SubActionBlur     SubAction = "blur"
+	SubActionScroll   SubAction = "scroll"
+	SubActionResize   SubAction = "resize"
+	SubActionRefresh  SubAction = "refresh"
 )
 
 // TransitionRule defines when and how a transition can occur
@@ -85,7 +135,81 @@ type StateConfig struct {
 	Transitions map[Action]State
 }
 
-// DFA represents the deterministic finite automaton
+// SubStateConfig defines configuration for a sub-state
+type SubStateConfig struct {
+	Name        string
+	Description string
+	
+	// Allowed sub-actions  
+	AllowedActions map[SubAction]bool
+	
+	// Validation function for sub-state
+	ValidateFunc func(data map[string]interface{}) error
+	
+	// Callbacks for sub-state
+	OnEnter func(data map[string]interface{}) error
+	OnExit  func(data map[string]interface{}) error
+	
+	// Auto-transition conditions
+	AutoTransitionTo   SubState
+	AutoTransitionFunc func(data map[string]interface{}) SubState
+	
+	// Completion condition - when this returns true, sub-state can exit
+	CanComplete func(data map[string]interface{}) bool
+}
+
+// MainStateConfig defines configuration for a main state with sub-states
+type MainStateConfig struct {
+	*StateConfig // Embed original config
+	
+	// Sub-states for this main state
+	SubStates map[SubState]*SubStateConfig
+	
+	// Initial sub-state when entering this main state
+	InitialSubState SubState
+	
+	// Whether sub-states are required or optional
+	RequireSubStateCompletion bool
+}
+
+// HierarchicalDFA represents a two-level DFA system
+type HierarchicalDFA struct {
+	// Synchronization
+	mu sync.RWMutex
+	
+	// Main state management (level 1 - screens)
+	mainStates map[MainState]*MainStateConfig
+	
+	// Current hierarchical state
+	currentState CompositeState
+	initial      CompositeState
+	finalStates  map[MainState]bool
+	
+	// History for hierarchical navigation
+	history []CompositeState
+	future  []CompositeState
+	
+	// Shared data store
+	data map[string]interface{}
+	
+	// Callbacks
+	callbacks *Callbacks
+	
+	// Global validation
+	GlobalValidator func(state CompositeState, data map[string]interface{}) error
+	
+	// Options
+	maxHistory     int
+	AllowBackToAny bool
+	strictMode     bool
+	DryRun         bool
+	
+	// Dry-run tracking
+	dryRunLog []string
+}
+
+// DFA represents the legacy single-level deterministic finite automaton
+// Kept for backward compatibility where needed
 type DFA struct {
 	// Synchronization
 	mu sync.RWMutex
@@ -122,7 +246,21 @@ type DFA struct {
 	dryRunLog []string
 }
 
-// New creates a new DFA instance
+// NewHierarchical creates a new hierarchical DFA instance
+func NewHierarchical() *HierarchicalDFA {
+	return &HierarchicalDFA{
+		mainStates:  make(map[MainState]*MainStateConfig),
+		finalStates: make(map[MainState]bool),
+		history:     make([]CompositeState, 0),
+		future:      make([]CompositeState, 0),
+		data:        make(map[string]interface{}),
+		maxHistory:  100,
+		strictMode:  true,
+		dryRunLog:   make([]string, 0),
+	}
+}
+
+// New creates a new DFA instance (legacy)
 func New() *DFA {
 	return &DFA{
 		states:      make(map[State]*StateConfig),
@@ -878,4 +1016,425 @@ func (d *DFA) Clone() *DFA {
 	clone.DryRun = d.DryRun
 
 	return clone
+}
+
+// =============================================================================
+// HIERARCHICAL DFA METHODS
+// =============================================================================
+
+// AddMainState adds a main state with optional sub-states to the hierarchical DFA
+func (h *HierarchicalDFA) AddMainState(mainState MainState, config *MainStateConfig) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	
+	if config == nil {
+		return errors.New("main state config cannot be nil")
+	}
+	
+	// Check if main state already exists
+	if _, exists := h.mainStates[mainState]; exists {
+		return fmt.Errorf("main state %s already exists", mainState)
+	}
+	
+	// Initialize sub-states map if nil
+	if config.SubStates == nil {
+		config.SubStates = make(map[SubState]*SubStateConfig)
+	}
+	
+	// Set first main state as initial if none set
+	if h.initial.Main == "" {
+		h.initial = CompositeState{Main: mainState, Sub: config.InitialSubState}
+		h.currentState = h.initial
+	}
+	
+	h.mainStates[mainState] = config
+	
+	if h.DryRun {
+		h.dryRunLog = append(h.dryRunLog, fmt.Sprintf("Added main state: %s", mainState))
+	}
+	
+	return nil
+}
+
+// AddSubState adds a sub-state to an existing main state
+func (h *HierarchicalDFA) AddSubState(mainState MainState, subState SubState, config *SubStateConfig) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	
+	if config == nil {
+		return errors.New("sub-state config cannot be nil")
+	}
+	
+	// Check if main state exists
+	mainConfig, exists := h.mainStates[mainState]
+	if !exists {
+		return fmt.Errorf("main state %s does not exist", mainState)
+	}
+	
+	// Check if sub-state already exists
+	if _, exists := mainConfig.SubStates[subState]; exists {
+		return fmt.Errorf("sub-state %s.%s already exists", mainState, subState)
+	}
+	
+	// Initialize allowed actions if nil
+	if config.AllowedActions == nil {
+		config.AllowedActions = make(map[SubAction]bool)
+	}
+	
+	mainConfig.SubStates[subState] = config
+	
+	if h.DryRun {
+		h.dryRunLog = append(h.dryRunLog, fmt.Sprintf("Added sub-state: %s.%s", mainState, subState))
+	}
+	
+	return nil
+}
+
+// NavigateToMainState transitions to a different main state  
+func (h *HierarchicalDFA) NavigateToMainState(mainState MainState) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	
+	return h.navigateToMainState(mainState)
+}
+
+// navigateToMainState internal method without locking
+func (h *HierarchicalDFA) navigateToMainState(mainState MainState) error {
+	// Check if main state exists
+	mainConfig, exists := h.mainStates[mainState]
+	if !exists {
+		return fmt.Errorf("main state %s does not exist", mainState)
+	}
+	
+	oldState := h.currentState
+	newState := CompositeState{Main: mainState, Sub: mainConfig.InitialSubState}
+	
+	// Validate transition if in strict mode
+	if h.strictMode && h.GlobalValidator != nil {
+		if err := h.GlobalValidator(newState, h.data); err != nil {
+			return fmt.Errorf("global validation failed: %w", err)
+		}
+	}
+	
+	// Call exit callback for current state
+	if oldState.Main != "" {
+		if oldMainConfig, ok := h.mainStates[oldState.Main]; ok {
+			if oldMainConfig.StateConfig != nil && oldMainConfig.StateConfig.OnExit != nil {
+				if err := oldMainConfig.StateConfig.OnExit(h.data); err != nil && h.strictMode {
+					return fmt.Errorf("exit callback failed: %w", err)
+				}
+			}
+			
+			// Call sub-state exit callback if in sub-state
+			if oldState.Sub != "" {
+				if subConfig, ok := oldMainConfig.SubStates[oldState.Sub]; ok && subConfig.OnExit != nil {
+					if err := subConfig.OnExit(h.data); err != nil && h.strictMode {
+						return fmt.Errorf("sub-state exit callback failed: %w", err)
+					}
+				}
+			}
+		}
+	}
+	
+	// Add to history
+	h.addToHistory(oldState)
+	
+	// Update current state
+	h.currentState = newState
+	
+	// Call enter callback for new main state
+	if mainConfig.StateConfig != nil && mainConfig.StateConfig.OnEnter != nil {
+		if err := mainConfig.StateConfig.OnEnter(h.data); err != nil && h.strictMode {
+			return fmt.Errorf("enter callback failed: %w", err)
+		}
+	}
+	
+	// Call enter callback for initial sub-state if it exists
+	if newState.Sub != "" {
+		if subConfig, ok := mainConfig.SubStates[newState.Sub]; ok && subConfig.OnEnter != nil {
+			if err := subConfig.OnEnter(h.data); err != nil && h.strictMode {
+				return fmt.Errorf("sub-state enter callback failed: %w", err)
+			}
+		}
+	}
+	
+	// Call transition callback
+	if h.callbacks != nil && h.callbacks.OnTransition != nil {
+		action := Action("navigate") // Default action for main state transitions
+		if err := h.callbacks.OnTransition(oldState.ToState(), newState.ToState(), action); err != nil && h.strictMode {
+			return fmt.Errorf("transition callback failed: %w", err)
+		}
+	}
+	
+	if h.DryRun {
+		h.dryRunLog = append(h.dryRunLog, fmt.Sprintf("Navigated: %s → %s", oldState, newState))
+	}
+	
+	return nil
+}
+
+// NavigateToSubState transitions to a sub-state within the current main state
+func (h *HierarchicalDFA) NavigateToSubState(subState SubState) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	
+	return h.navigateToSubState(subState)
+}
+
+// navigateToSubState internal method without locking
+func (h *HierarchicalDFA) navigateToSubState(subState SubState) error {
+	currentMain := h.currentState.Main
+	
+	// Check if main state has this sub-state
+	mainConfig, exists := h.mainStates[currentMain]
+	if !exists {
+		return fmt.Errorf("current main state %s does not exist", currentMain)
+	}
+	
+	subConfig, exists := mainConfig.SubStates[subState]
+	if !exists {
+		return fmt.Errorf("sub-state %s.%s does not exist", currentMain, subState)
+	}
+	
+	oldState := h.currentState
+	newState := CompositeState{Main: currentMain, Sub: subState}
+	
+	// Validate sub-state transition
+	if h.strictMode && subConfig.ValidateFunc != nil {
+		if err := subConfig.ValidateFunc(h.data); err != nil {
+			return fmt.Errorf("sub-state validation failed: %w", err)
+		}
+	}
+	
+	// Call exit callback for current sub-state
+	if oldState.Sub != "" {
+		if oldSubConfig, ok := mainConfig.SubStates[oldState.Sub]; ok && oldSubConfig.OnExit != nil {
+			if err := oldSubConfig.OnExit(h.data); err != nil && h.strictMode {
+				return fmt.Errorf("sub-state exit callback failed: %w", err)
+			}
+		}
+	}
+	
+	// Update current state
+	h.currentState = newState
+	
+	// Call enter callback for new sub-state
+	if subConfig.OnEnter != nil {
+		if err := subConfig.OnEnter(h.data); err != nil && h.strictMode {
+			return fmt.Errorf("sub-state enter callback failed: %w", err)
+		}
+	}
+	
+	if h.DryRun {
+		h.dryRunLog = append(h.dryRunLog, fmt.Sprintf("Sub-state transition: %s → %s", oldState, newState))
+	}
+	
+	return nil
+}
+
+// HandleSubAction processes a sub-action within the current sub-state
+func (h *HierarchicalDFA) HandleSubAction(action SubAction) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	
+	currentMain := h.currentState.Main
+	currentSub := h.currentState.Sub
+	
+	// Check if we're in a sub-state
+	if currentSub == "" {
+		return fmt.Errorf("not currently in a sub-state, cannot handle sub-action %s", action)
+	}
+	
+	// Get main and sub state configs
+	mainConfig, exists := h.mainStates[currentMain]
+	if !exists {
+		return fmt.Errorf("current main state %s does not exist", currentMain)
+	}
+	
+	subConfig, exists := mainConfig.SubStates[currentSub]
+	if !exists {
+		return fmt.Errorf("current sub-state %s.%s does not exist", currentMain, currentSub)
+	}
+	
+	// Check if action is allowed
+	if len(subConfig.AllowedActions) > 0 {
+		if !subConfig.AllowedActions[action] {
+			return fmt.Errorf("action %s not allowed in sub-state %s.%s", action, currentMain, currentSub)
+		}
+	}
+	
+	// Check for auto-transition
+	if subConfig.AutoTransitionFunc != nil {
+		if nextSub := subConfig.AutoTransitionFunc(h.data); nextSub != "" {
+			return h.navigateToSubState(nextSub)
+		}
+	} else if subConfig.AutoTransitionTo != "" {
+		return h.navigateToSubState(subConfig.AutoTransitionTo)
+	}
+	
+	if h.DryRun {
+		h.dryRunLog = append(h.dryRunLog, fmt.Sprintf("Handled sub-action: %s in %s", action, h.currentState))
+	}
+	
+	return nil
+}
+
+// CanCompleteCurrentSubState checks if current sub-state can be completed
+func (h *HierarchicalDFA) CanCompleteCurrentSubState() bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	
+	if h.currentState.Sub == "" {
+		return true // Not in sub-state, always can complete
+	}
+	
+	mainConfig, exists := h.mainStates[h.currentState.Main]
+	if !exists {
+		return false
+	}
+	
+	subConfig, exists := mainConfig.SubStates[h.currentState.Sub]
+	if !exists {
+		return false
+	}
+	
+	if subConfig.CanComplete != nil {
+		return subConfig.CanComplete(h.data)
+	}
+	
+	return true // No completion condition means always can complete
+}
+
+// GetCurrentState returns the current composite state
+func (h *HierarchicalDFA) GetCurrentState() CompositeState {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return h.currentState
+}
+
+// SetData sets a data value
+func (h *HierarchicalDFA) SetData(key string, value interface{}) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	
+	oldValue := h.data[key]
+	h.data[key] = value
+	
+	// Call data change callback
+	if h.callbacks != nil && h.callbacks.OnDataChange != nil {
+		h.callbacks.OnDataChange(h.currentState.ToState(), key, oldValue, value)
+	}
+}
+
+// GetData gets a data value
+func (h *HierarchicalDFA) GetData(key string) (interface{}, bool) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	
+	value, exists := h.data[key]
+	return value, exists
+}
+
+// GetAllData returns a copy of all data
+func (h *HierarchicalDFA) GetAllData() map[string]interface{} {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	
+	result := make(map[string]interface{})
+	for k, v := range h.data {
+		result[k] = v
+	}
+	return result
+}
+
+// CanGoBack checks if we can go back in history
+func (h *HierarchicalDFA) CanGoBack() bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return len(h.history) > 0
+}
+
+// GoBack goes back to the previous state in history
+func (h *HierarchicalDFA) GoBack() error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	
+	if len(h.history) == 0 {
+		return errors.New("no previous state in history")
+	}
+	
+	// Get previous state
+	prevState := h.history[len(h.history)-1]
+	h.history = h.history[:len(h.history)-1]
+	
+	// Add current state to future
+	h.addToFuture(h.currentState)
+	
+	// Navigate to previous state
+	oldState := h.currentState
+	h.currentState = prevState
+	
+	if h.DryRun {
+		h.dryRunLog = append(h.dryRunLog, fmt.Sprintf("Went back: %s → %s", oldState, prevState))
+	}
+	
+	return nil
+}
+
+// addToHistory adds a state to history
+func (h *HierarchicalDFA) addToHistory(state CompositeState) {
+	// Don't add if same as current
+	if len(h.history) > 0 && h.history[len(h.history)-1] == state {
+		return
+	}
+	
+	h.history = append(h.history, state)
+	
+	// Trim history if too long
+	if len(h.history) > h.maxHistory {
+		h.history = h.history[1:]
+	}
+	
+	// Clear future when adding new history
+	h.future = h.future[:0]
+}
+
+// addToFuture adds a state to future (for redo)
+func (h *HierarchicalDFA) addToFuture(state CompositeState) {
+	h.future = append(h.future, state)
+	
+	// Trim future if too long
+	if len(h.future) > h.maxHistory {
+		h.future = h.future[1:]
+	}
+}
+
+// IsFinalState checks if the current main state is final
+func (h *HierarchicalDFA) IsFinalState() bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return h.finalStates[h.currentState.Main]
+}
+
+// SetDryRun enables or disables dry-run mode
+func (h *HierarchicalDFA) SetDryRun(dryRun bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.DryRun = dryRun
+}
+
+// GetDryRunLog returns the dry-run log
+func (h *HierarchicalDFA) GetDryRunLog() []string {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	result := make([]string, len(h.dryRunLog))
+	copy(result, h.dryRunLog)
+	return result
+}
+
+// SetCallbacks sets the callbacks for the hierarchical DFA
+func (h *HierarchicalDFA) SetCallbacks(callbacks *Callbacks) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.callbacks = callbacks
 }

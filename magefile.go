@@ -23,29 +23,26 @@ var (
 
 	// Directories
 	binDir      = "bin"
-	exampleDir  = "./examples/minimal"
 	coverageDir = "coverage"
 
-	// Binary name and extension
-	binaryName = "setupkit-example"
-	binExt     = getBinaryExt()
+	// Binary extension
+	binExt = getBinaryExt()
 )
 
 // Default target
 var Default = All
 
-// All runs clean, test and build all examples
+// All runs clean, test and build
 func All() {
 	mg.Deps(Clean)
 	mg.Deps(Test)
 	mg.Deps(Build)
 }
 
-// Build builds the minimal example installer using the framework
-/*
+// Build builds the embedded installer demo
 func Build() error {
-	fmt.Println("Building SetupKit minimal example installer...")
-	fmt.Println("Note: The SetupKit framework provides all UI components!")
+	fmt.Println("Building SetupKit embedded installer...")
+	fmt.Println("All configuration and assets are embedded in the executable.")
 	fmt.Println()
 
 	// Create bin directory
@@ -53,34 +50,27 @@ func Build() error {
 		return err
 	}
 
-	output := filepath.Join(binDir, binaryName+binExt)
-
-	// Build ldflags
+	// Build ldflags for embedded version
 	ldflags := fmt.Sprintf("-s -w -X main.Version=%s -X main.BuildDate=%s", version, buildDate)
 
-	// Build the example - the framework handles everything
-	fmt.Println("Building with embedded framework UI...")
-	args := []string{"build", "-tags", "desktop,production", "-v", "-ldflags", ldflags, "-o", output, exampleDir}
+	// Build embedded installer
+	output := filepath.Join(binDir, "setupkit-installer-demo"+binExt)
+	args := []string{"build", "-v", "-ldflags", ldflags, "-o", output, "./examples/installer-demo"}
 
 	if err := sh.RunV("go", args...); err != nil {
 		return fmt.Errorf("build failed: %w", err)
 	}
 
-	fmt.Println()
-	fmt.Println("✅ Build successful!")
-	fmt.Printf("📦 Output: %s\n", output)
-	fmt.Println()
-	fmt.Println("The framework has embedded the complete UI.")
-	fmt.Println("No additional files or folders needed!")
+	fmt.Printf("✅ Embedded installer built: %s\n", output)
+	fmt.Println("✅ Single-file installer ready - no external dependencies needed!")
 
 	return nil
 }
-*/
 
-// BuildExamples builds all example installers using the framework
-func Build() error {
-	fmt.Println("Building all SetupKit example installers...")
-	fmt.Println("Note: The SetupKit framework provides all UI components!")
+// BuildCustomStateDemo builds the custom state demo
+func BuildCustomStateDemo() error {
+	fmt.Println("Building SetupKit custom state demo...")
+	fmt.Println("Demonstrates database configuration custom state.")
 	fmt.Println()
 
 	// Create bin directory
@@ -88,63 +78,43 @@ func Build() error {
 		return err
 	}
 
-	// Define all examples
-	examples := []struct {
-		name string
-		dir  string
-	}{
-		{"minimal", "./examples/minimal"},
-		{"simplest", "./examples/simplest"},
-		{"branded", "./examples/branded"},
+	// Build custom state demo
+	output := filepath.Join(binDir, "setupkit-custom-state-demo"+binExt)
+	args := []string{"build", "-v", "-o", output, "./examples/custom-state-demo"}
+
+	if err := sh.RunV("go", args...); err != nil {
+		return fmt.Errorf("custom state demo build failed: %w", err)
 	}
 
-	// Build ldflags
-	ldflags := fmt.Sprintf("-s -w -X main.Version=%s -X main.BuildDate=%s", version, buildDate)
+	fmt.Printf("✅ Custom state demo built: %s\n", output)
+	fmt.Println("✅ Database configuration demo ready!")
 
-	// Build each example
-	for _, example := range examples {
-		fmt.Printf("Building %s example...\n", example.name)
-		output := filepath.Join(binDir, "setupkit-"+example.name+binExt)
+	return nil
+}
 
-		args := []string{"build", "-tags", "desktop,production", "-v", "-ldflags", ldflags, "-o", output, example.dir}
-
-		if err := sh.RunV("go", args...); err != nil {
-			return fmt.Errorf("build failed for %s example: %w", example.name, err)
-		}
-
-		fmt.Printf("✅ %s example built: %s\n", example.name, output)
-	}
-
-	fmt.Println()
-	fmt.Println("✅ All examples built successfully!")
-	fmt.Println("The framework has embedded the complete UI in each example.")
-	fmt.Println("No additional files or folders needed!")
-
+// BuildAll builds both demo applications
+func BuildAll() error {
+	mg.Deps(Build)
+	mg.Deps(BuildCustomStateDemo)
 	return nil
 }
 
 // Test runs all tests
 func Test() error {
 	fmt.Println("Running tests...")
-	return sh.RunV("go", "test", "-short", "./pkg/...", "./internal/...")
+	return sh.RunV("go", "test", "-short", "./pkg/...")
 }
 
 // TestVerbose runs tests with verbose output
 func TestVerbose() error {
 	fmt.Println("Running tests (verbose)...")
-	return sh.RunV("go", "test", "-v", ".")
+	return sh.RunV("go", "test", "-v", "./pkg/...")
 }
 
 // TestRace runs tests with race detector
 func TestRace() error {
 	fmt.Println("Running tests with race detector...")
-	return sh.RunV("go", "test", "-race", "-short", "./pkg/...", "./internal/...")
-}
-
-// Bench runs benchmarks
-func Bench() error {
-	fmt.Println("Running benchmarks...")
-	return sh.RunV("go", "test", "-bench=.", "-benchmem", "./pkg/...", "./internal/...")
+	return sh.RunV("go", "test", "-race", "-short", "./pkg/...")
 }
 
 // Coverage generates test coverage report
@@ -158,7 +128,7 @@ func Coverage() error {
 
 	// Generate coverage data
 	coverFile := filepath.Join(coverageDir, "coverage.out")
-	if err := sh.Run("go", "test", "-coverprofile="+coverFile, "./pkg/...", "./internal/..."); err != nil {
+	if err := sh.Run("go", "test", "-coverprofile="+coverFile, "./pkg/..."); err != nil {
 		return err
 	}
 
@@ -190,49 +160,15 @@ func Lint() error {
 	return sh.RunV("golangci-lint", "run")
 }
 
-// Clean removes ALL build artifacts
+// Clean removes build artifacts
 func Clean() error {
 	fmt.Println("Cleaning build artifacts...")
 
-	// Remove root build directories
+	// Remove build directories
 	dirs := []string{binDir, coverageDir}
 	for _, dir := range dirs {
 		if err := os.RemoveAll(dir); err != nil {
 			fmt.Printf("Warning: Failed to remove %s: %v\n", dir, err)
-		}
-	}
-
-	// Clean up example directory - remove any generated folders
-	fmt.Println("Cleaning example directory...")
-
-	// Remove unwanted directories from example
-	unwantedDirs := []string{
-		filepath.Join(exampleDir, "build"),
-		filepath.Join(exampleDir, "frontend"),
-		filepath.Join(exampleDir, "bin"),
-	}
-
-	for _, dir := range unwantedDirs {
-		if _, err := os.Stat(dir); err == nil {
-			fmt.Printf("  Removing %s...\n", dir)
-			if err := os.RemoveAll(dir); err != nil {
-				fmt.Printf("  Warning: Failed to remove %s: %v\n", dir, err)
-			}
-		}
-	}
-
-	// Remove old/backup files
-	oldFiles := []string{
-		filepath.Join(exampleDir, "wails.json.old"),
-		filepath.Join(exampleDir, "main.go.old"),
-		filepath.Join(exampleDir, "main_simple.go.old"),
-		filepath.Join(exampleDir, "app.go"),
-	}
-
-	for _, file := range oldFiles {
-		if _, err := os.Stat(file); err == nil {
-			fmt.Printf("  Removing %s...\n", file)
-			os.Remove(file)
 		}
 	}
 
@@ -245,46 +181,10 @@ func Clean() error {
 		fmt.Printf("Warning: Failed to remove .out files: %v\n", err)
 	}
 
-	fmt.Println()
 	fmt.Println("✅ Cleanup complete!")
-	fmt.Println("The example directory now contains only the essential files.")
-
 	return nil
 }
 
-// CleanExample removes all generated files from the example directory
-func CleanExample() error {
-	fmt.Println("Cleaning example directory to framework-only state...")
-
-	// Remove ALL generated directories
-	unwantedDirs := []string{
-		filepath.Join(exampleDir, "build"),
-		filepath.Join(exampleDir, "frontend"),
-		filepath.Join(exampleDir, "bin"),
-	}
-
-	for _, dir := range unwantedDirs {
-		if _, err := os.Stat(dir); err == nil {
-			fmt.Printf("Removing %s\n", dir)
-			if err := os.RemoveAll(dir); err != nil {
-				return fmt.Errorf("failed to remove %s: %w", dir, err)
-			}
-		}
-	}
-
-	// Remove wails.json if it exists
-	wailsFile := filepath.Join(exampleDir, "wails.json")
-	if _, err := os.Stat(wailsFile); err == nil {
-		fmt.Printf("Removing %s\n", wailsFile)
-		os.Remove(wailsFile)
-	}
-
-	fmt.Println()
-	fmt.Println("✅ Example directory cleaned!")
-	fmt.Println("Only main.go and README.md remain - as it should be in a framework!")
-
-	return nil
-}
 
 // Deps downloads dependencies
 func Deps() error {
@@ -304,13 +204,104 @@ func Verify() error {
 	return sh.RunV("go", "mod", "verify")
 }
 
-// Run runs the example installer
+// Run runs the embedded installer in auto mode
 func Run() error {
 	mg.Deps(Build)
-	binary := filepath.Join(binDir, binaryName+binExt)
-	fmt.Println("Running example installer...")
+	binary := filepath.Join(binDir, "setupkit-installer-demo"+binExt)
+	fmt.Println("Running embedded installer (auto mode)...")
+	fmt.Println("Uses embedded configuration and assets")
 	fmt.Println()
 	return sh.RunV(binary)
+}
+
+// RunGUI runs the installer in GUI mode
+func RunGUI() error {
+	mg.Deps(Build)
+	binary := filepath.Join(binDir, "setupkit-installer-demo"+binExt)
+	fmt.Println("Starting embedded installer (GUI mode)...")
+	fmt.Println("Opens browser-based interface with embedded assets")
+	fmt.Println()
+	return sh.RunV(binary, "-mode=gui")
+}
+
+// RunCLI runs the installer in CLI mode
+func RunCLI() error {
+	mg.Deps(Build)
+	binary := filepath.Join(binDir, "setupkit-installer-demo"+binExt)
+	fmt.Println("Starting embedded installer (CLI mode)...")
+	fmt.Println("Interactive CLI with embedded configuration")
+	fmt.Println()
+	return sh.RunV(binary, "-mode=cli")
+}
+
+// RunSilent runs the installer in silent mode
+func RunSilent() error {
+	mg.Deps(Build)
+	binary := filepath.Join(binDir, "setupkit-installer-demo"+binExt)
+	fmt.Println("Starting embedded installer (silent mode)...")
+	fmt.Println("Unattended installation with embedded assets")
+	fmt.Println()
+	return sh.RunV(binary, "-silent", "-profile=minimal")
+}
+
+// RunCustomStateDemo runs the custom state demo in silent mode
+func RunCustomStateDemo() error {
+	mg.Deps(BuildCustomStateDemo)
+	binary := filepath.Join(binDir, "setupkit-custom-state-demo"+binExt)
+	fmt.Println("Starting custom state demo (database configuration)...")
+	fmt.Println("Demonstrates: Welcome → License → Components → Install Path → DB Config → Summary → Complete")
+	fmt.Println()
+	return sh.RunV(binary, "-mode=silent")
+}
+
+// RunCustomStateDemoCLI runs the custom state demo in CLI mode
+func RunCustomStateDemoCLI() error {
+	mg.Deps(BuildCustomStateDemo)
+	binary := filepath.Join(binDir, "setupkit-custom-state-demo"+binExt)
+	fmt.Println("Starting custom state demo (CLI mode)...")
+	fmt.Println("Interactive CLI with database configuration state")
+	fmt.Println()
+	return sh.RunV(binary, "-mode=cli")
+}
+
+// RunCustomStateDemoAuto runs the custom state demo in auto mode
+func RunCustomStateDemoAuto() error {
+	mg.Deps(BuildCustomStateDemo)
+	binary := filepath.Join(binDir, "setupkit-custom-state-demo"+binExt)
+	fmt.Println("Starting custom state demo (auto mode)...")
+	fmt.Println("Auto-selects best UI mode for database configuration")
+	fmt.Println()
+	return sh.RunV(binary, "-mode=auto")
+}
+
+// HelpCustomStateDemo shows custom state demo help
+func HelpCustomStateDemo() error {
+	mg.Deps(BuildCustomStateDemo)
+	binary := filepath.Join(binDir, "setupkit-custom-state-demo"+binExt)
+	fmt.Println("Custom State Demo Help:")
+	fmt.Println()
+	return sh.RunV(binary, "--help")
+}
+
+// CleanInstall cleans test installation directories
+func CleanInstall() error {
+	fmt.Println("Cleaning test installation directories...")
+
+	testDirs := []string{
+		"/tmp/DemoApp",
+		"C:\\Program Files\\DemoApp",
+		filepath.Join(os.Getenv("HOME"), "Applications", "DemoApp"),
+		"/opt/demoapp",
+	}
+
+	for _, dir := range testDirs {
+		if err := os.RemoveAll(dir); err != nil && !os.IsNotExist(err) {
+			fmt.Printf("Warning: Failed to remove %s: %v\n", dir, err)
+		}
+	}
+
+	fmt.Println("✅ Test installations cleaned")
+	return nil
 }
 
 // Version shows version information
@@ -355,3 +346,4 @@ func removeFiles(dir, pattern string) error {
 		return nil
 	})
 }
+

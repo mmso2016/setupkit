@@ -1,46 +1,99 @@
 // Package setupkit provides a modern, easy-to-use installer framework for Windows applications.
+// This is the main API entry point that provides a simple interface to the underlying installer framework.
 package setupkit
 
 import (
 	"github.com/mmso2016/setupkit/pkg/installer"
+	"github.com/mmso2016/setupkit/pkg/installer/core"
 )
 
-// Config is an alias for installer.Config
-type Config = installer.Config
+// Config is an alias for core.Config
+type Config = core.Config
 
-// Component is an alias for installer.Component
-type Component = installer.Component
+// Component is an alias for core.Component
+type Component = core.Component
 
-// Theme is an alias for installer.Theme
-type Theme = installer.Theme
+// InstallMode is an alias for core.InstallMode
+type InstallMode = core.InstallMode
+
+// Mode constants
+const (
+	ModeExpress     = core.ModeExpress
+	ModeCustom      = core.ModeCustom
+	ModeAdvanced    = core.ModeAdvanced
+	ModeRepair      = core.ModeRepair
+	ModeUninstall   = core.ModeUninstall
+	ModeUserDefined = core.ModeUserDefined
+)
+
+// UI Mode constants
+const (
+	ModeSilent = core.ModeSilent
+	ModeCLI    = core.ModeCLI
+	ModeGUI    = core.ModeGUI
+	ModeAuto   = core.ModeAuto
+)
 
 // Install creates and runs an installer with the given configuration.
 // This is the simplest way to create an installer - just call this function.
 //
 // Example:
 //
-//	setupkit.Install(setupkit.Config{
+//	setupkit.Install(&setupkit.Config{
 //	    AppName: "My App",
 //	    Version: "1.0.0",
 //	    Components: []setupkit.Component{
 //	        {ID: "core", Name: "Core Files", Required: true},
 //	    },
 //	})
-func Install(config Config) error {
-	return installer.Install(config)
+func Install(config *Config) error {
+	app, err := New(config)
+	if err != nil {
+		return err
+	}
+	return app.Run()
 }
 
-// Run creates and runs an installer with the given configuration.
-// This is the recommended way to use SetupKit.
+// New creates a new installer instance with the given configuration.
+// This gives you more control over the installer setup process.
 //
 // Example:
 //
-//	setupkit.Run(&setupkit.Config{
+//	app, err := setupkit.New(&setupkit.Config{
 //	    AppName: "My App",
 //	    Version: "1.0.0",
 //	})
-func Run(config *Config) error {
-	return installer.Run(config)
+//	if err != nil {
+//	    return err
+//	}
+//	return app.Run()
+func New(config *Config) (*installer.Installer, error) {
+	// Convert setupkit config to installer options
+	opts := []installer.Option{}
+	
+	if config.AppName != "" {
+		opts = append(opts, installer.WithAppName(config.AppName))
+	}
+	if config.Version != "" {
+		opts = append(opts, installer.WithVersion(config.Version))
+	}
+	if config.Publisher != "" {
+		opts = append(opts, installer.WithPublisher(config.Publisher))
+	}
+	if config.Website != "" {
+		opts = append(opts, installer.WithWebsite(config.Website))
+	}
+	if config.InstallDir != "" {
+		opts = append(opts, installer.WithInstallDir(config.InstallDir))
+	}
+	if len(config.Components) > 0 {
+		opts = append(opts, installer.WithComponents(config.Components...))
+	}
+	if config.Mode != 0 {
+		opts = append(opts, installer.WithMode(config.Mode))
+	}
+	
+	return installer.New(opts...)
 }
 
 // Common size constants for convenience
@@ -50,32 +103,11 @@ const (
 	GB = 1024 * MB
 )
 
-// Predefined themes
-var (
-	ThemeDefault = Theme{Name: "default"}
-	ThemeDark    = Theme{
-		Name: "dark",
-		CustomCSS: `
-			body { background: #1a1a2e; }
-			.installer-container { background: #16213e; color: #eee; }
-			.header { background: linear-gradient(135deg, #0f3460 0%, #16213e 100%); }
-		`,
-	}
-	ThemeCorporate = Theme{
-		Name:         "corporate",
-		PrimaryColor: "#0061a7",
-		CustomCSS: `
-			.header { background: linear-gradient(135deg, #0061a7 0%, #004d84 100%); }
-			.step.active .step-circle { background: #0061a7; }
-		`,
-	}
-)
-
-// Common licenses
+// Common licenses for convenience
 const (
 	LicenseMIT = `MIT License
 
-Copyright (c) 2024
+Copyright (c) 2025
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

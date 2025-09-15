@@ -1,0 +1,40 @@
+{
+  "app": {
+    "name": "DemoApp",
+    "version": "1.0.0",
+    "publisher": "SetupKit Framework",
+    "website": "https://github.com/mmso2016/setupkit"
+  },
+  "features": {
+    "webview_ui": true,
+    "cli_fallback": true,
+    "cross_platform": true,
+    "html_builder": true
+  },
+  "installation": {
+    "default_path": "C:\\Program Files\\DemoApp",
+    "required_space_mb": 50,
+    "create_shortcuts": true,
+    "add_to_path": false
+  },
+  "components": [
+    {
+      "id": "core",
+      "name": "Core Application",
+      "required": true,
+      "files": ["README.txt", "LICENSE.txt", "config.json"]
+    },
+    {
+      "id": "docs",
+      "name": "Documentation",
+      "required": false,
+      "files": ["user-guide.txt", "api-reference.txt"]
+    },
+    {
+      "id": "examples",
+      "name": "Example Files",
+      "required": false,
+      "files": ["sample-config.txt", "demo-script.txt"]
+    }
+  ]
+}

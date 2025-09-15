@@ -1,0 +1,46 @@
+# DemoApp Sample Configuration
+# ============================
+
+# Display Settings
+window_width=1024
+window_height=768
+window_maximized=false
+theme=dark
+
+# Performance Settings  
+cache_size_mb=100
+worker_threads=4
+enable_gpu_acceleration=true
+memory_limit_mb=512
+
+# Network Settings
+connection_timeout=30
+retry_attempts=3
+enable_proxy=false
+proxy_host=
+proxy_port=
+
+# Feature Flags
+enable_advanced_features=true
+enable_beta_features=false
+enable_logging=true
+log_level=info
+
+# User Preferences
+auto_save=true
+auto_backup=false
+backup_interval_minutes=15
+recent_files_count=10
+
+# Export Settings
+default_export_format=json
+export_compression=true
+export_include_metadata=true
+
+# Advanced Settings
+debug_mode=false
+developer_mode=false
+telemetry_enabled=true
+update_check_enabled=true
+
+# End of configuration file

@@ -1,0 +1,91 @@
+# DemoApp Installer Configuration
+# This file allows for unattended installations and customization
+
+app_name: "DemoApp"
+version: "1.0.0"
+publisher: "SetupKit Framework"
+website: "https://github.com/mmso2016/setupkit"
+
+# Installation behavior
+mode: "auto"              # auto, gui, cli, silent
+unattended: false         # Set to true for automated installs
+accept_license: false     # Auto-accept license in unattended mode
+install_dir: ""           # Leave empty to use platform defaults
+
+# License text (MIT License)
+license: |
+  MIT License
+
+  Copyright (c) 2024 SetupKit Framework
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+# Installation components
+components:
+  - id: "core"
+    name: "Core Application"
+    description: "Essential application files and configuration"
+    required: true
+    selected: true
+    files:
+      - "README.txt"
+      - "LICENSE.txt" 
+      - "config.json"
+
+  - id: "docs"
+    name: "Documentation"
+    description: "User guide and API reference documentation"
+    required: false
+    selected: true
+    files:
+      - "user-guide.txt"
+      - "api-reference.txt"
+
+  - id: "examples"
+    name: "Example Files"
+    description: "Sample configuration and demo scripts"
+    required: false
+    selected: false
+    files:
+      - "sample-config.txt"
+      - "demo-script.txt"
+
+# Advanced settings
+settings:
+  create_shortcuts: true      # Create desktop and start menu shortcuts
+  add_to_path: false         # Add installation directory to PATH
+  backup_existing: true      # Backup existing files before overwrite
+  verify_installation: true  # Verify files after installation
+
+# Unattended installation profiles
+profiles:
+  minimal:
+    description: "Minimal installation with core files only"
+    components: ["core"]
+    create_shortcuts: false
+    
+  full:
+    description: "Full installation with all components"
+    components: ["core", "docs", "examples"]
+    create_shortcuts: true
+    
+  developer:
+    description: "Developer setup with documentation and examples"
+    components: ["core", "docs", "examples"]
+    add_to_path: true

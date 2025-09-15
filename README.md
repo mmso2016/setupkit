@@ -1,314 +1,439 @@
-# SetupKit - Installer Framework for Go
+# SetupKit - Modern Installer Framework
 
-> **Native installer FRAMEWORK for Go applications - no InnoSetup, InstallShield, or NSIS required.**
+SetupKit is a powerful, cross-platform installer framework written in Go that enables developers to create professional installers with minimal code. It provides multiple UI modes (GUI, CLI, Silent) and uses a DFA-based controller for consistent installation flows.
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/mmso2016/setupkit.svg)](https://pkg.go.dev/github.com/mmso2016/setupkit)
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-available-green.svg)](UI_SYSTEM.md)
+## 🚀 Features
 
----
+### Single-File Architecture
+- **Everything embedded**: Configuration, assets, and installation files are embedded in the executable
+- **Zero dependencies**: Single .exe file contains complete installer - no external files needed
+- **Enterprise ready**: Perfect for corporate environments and mass deployments
+- **Optional override**: External YAML files can customize behavior when needed
 
-## 🚧 Under Construction 🚧
+### Multi-Modal UI Support
+- **GUI Mode**: Browser-based interface with HTML/CSS/JavaScript
+- **CLI Mode**: Interactive command-line interface
+- **Silent Mode**: Unattended installation for automation
+- **Auto Mode**: Automatically selects the best UI for the environment
 
-This framework is currently being actively developed. Core functionality is working but the API may still change. Watch/star the repository to get notified about updates!
+### Enterprise Configuration System
+- **Embedded by default**: Configuration and assets are compiled into the executable
+- **External file override**: Use `-config=file.yml` to customize for specific deployments
+- **Mass deployment support**: Single installer can be configured for different environments
+- Component definitions with file lists
+- Installation profiles (minimal, full, developer)
+- License agreement support
+- Advanced settings (shortcuts, PATH, verification)
 
----
+### DFA-Controlled Flow
+- Deterministic Finite Automaton ensures consistent installation flow
+- Same flow logic for all UI modes
+- States: Welcome → License → Components → Install Path → Summary → Progress → Complete
+- **Custom States**: Add custom configuration steps anywhere in the flow
 
-## Why SetupKit?
+### Custom States Support
+- **Extensible Flow**: Add custom configuration steps (database setup, service configuration, etc.)
+- **Type-Safe Interface**: Strongly typed handlers with validation
+- **UI Integration**: Works with all UI modes (Silent, CLI, GUI)
+- **Flexible Positioning**: Insert states anywhere in the installation flow
+- **Built-in Examples**: Database configuration, user setup, license validation
 
-Traditional installer tools require learning scripting languages (Pascal for InnoSetup, NSIS Script, etc.) and managing external tools. SetupKit is different:
+### HTML Builder System
+- Programmatic HTML generation for installer pages
+- Server-side rendering (SSR) for dynamic content
+- Responsive design with built-in CSS frameworks
 
-- **Write in Go**: Use the language you already know
-- **Single Binary**: Everything embedded in one .exe file
-- **Framework, not Library**: You write configuration, we handle the complexity
-- **Professional UI**: Modern installer with gradient design and animations
-- **Native Experience**: Uses Wails/WebView2 for native Windows feel
-- **🧪 UNIT TESTABLE**: Test your installer logic with standard Go tests - no other tools needed!
-
-## Quick Start
-
-### Installation
-
-```bash
-go get github.com/mmso2016/setupkit
-```
-
-### Minimal Example (5 lines!)
-
-```go
-package main
-
-import "github.com/mmso2016/setupkit"
-
-func main() {
-    setupkit.Install(setupkit.Config{
-        AppName: "My App",
-        Version: "1.0.0",
-    })
-}
-```
-
-### A More Complex Example
-
-```go
-package main
-
-import (
-    "log"
-    "github.com/mmso2016/setupkit"
-)
-
-func main() {
-    err := setupkit.Install(setupkit.Config{
-        AppName:   "My Application",
-        Version:   "2.0.0",
-        Publisher: "Your Company",
-        Website:   "https://example.com",
-        License:   setupkit.LicenseMIT,
-        
-        Components: []setupkit.Component{
-            {
-                ID:       "core",
-                Name:     "Core Application",
-                Size:     45 * setupkit.MB,
-                Required: true,
-                Selected: true,
-            },
-            {
-                ID:          "docs",
-                Name:        "Documentation",
-                Description: "User manual and API documentation",
-                Size:        12 * setupkit.MB,
-                Selected:    true,
-            },
-        },
-        
-        // Optional callbacks
-        BeforeInstall: func() error {
-            // Pre-installation checks
-            return nil
-        },
-        AfterInstall: func() error {
-            // Post-installation tasks
-            return nil
-        },
-    })
-    
-    if err != nil {
-        log.Fatal(err)
-    }
-}
-```
-
-## Building
-
-```bash
-# Standard build
-go build -o installer.exe main.go
-
-# With build tools (includes Wails tags)
-mage build
-# or
-make build
-```
-
-## Unit Testing - The Game Changer! 🧪
-
-**Unlike EVERY other installer tool**, SetupKit installers are fully testable with standard Go tests:
-
-```go
-func TestMyInstaller(t *testing.T) {
-    config := setupkit.Config{
-        AppName: "TestApp",
-        Version: "1.0.0",
-        Components: []setupkit.Component{
-            {ID: "core", Name: "Core", Size: 10*setupkit.MB},
-        },
-    }
-    
-    // Test configuration validation
-    assert.NoError(t, config.Validate())
-    
-    // Test component selection logic
-    selected := config.GetSelectedComponents()
-    assert.Equal(t, 1, len(selected))
-    
-    // Test your callbacks
-    err := config.BeforeInstall()
-    assert.NoError(t, err)
-}
-```
-
-**No special tools needed** - just `go test` like any other Go project! Try that with InnoSetup or NSIS! 😎
-
-## Features
-
-### Framework Provides
-
-- ✅ **Complete UI** - Welcome, License, Components, Progress, Completion pages
-- ✅ **Native Window** - Using Wails/WebView2 (no browser)
-- ✅ **Progress Tracking** - Real-time installation progress
-- ✅ **Component Selection** - Tree view with dependencies
-- ✅ **Themes** - Default, Dark, Corporate, or custom
-- ✅ **Single Executable** - Everything embedded
-
-### You Provide
-
-- ✅ **Configuration** - App name, version, components
-- ✅ **Installation Logic** - What to actually install (optional)
-- ✅ **Callbacks** - Pre/post install hooks (optional)
-
-## Customization
-
-### Themes
-
-```go
-Theme: setupkit.ThemeDefault    // Professional blue gradient
-Theme: setupkit.ThemeDark       // Dark mode
-Theme: setupkit.ThemeCorporate  // Corporate style
-
-// Custom theme
-Theme: setupkit.Theme{
-    PrimaryColor: "#FF6B00",
-    CustomCSS: `/* your styles */`,
-}
-```
-
-### Predefined Constants
-
-```go
-// Licenses
-License: setupkit.LicenseMIT
-License: setupkit.LicenseApache2
-License: setupkit.LicenseGPL3
-
-// Sizes
-Size: 100 * setupkit.KB
-Size: 50 * setupkit.MB
-Size: 2 * setupkit.GB
-```
-
-## Examples
-
-### Enterprise Installer
-
-```go
-setupkit.Install(setupkit.Config{
-    AppName:   "Enterprise Suite",
-    Publisher: "BigCorp Inc.",
-    Theme:     setupkit.ThemeCorporate,
-    
-    Components: []setupkit.Component{
-        {ID: "server", Name: "Server", Size: 500*setupkit.MB, Required: true},
-        {ID: "client", Name: "Client", Size: 100*setupkit.MB},
-        {ID: "admin", Name: "Admin Tools", Size: 50*setupkit.MB},
-    },
-    
-    BeforeInstall: func() error {
-        // Stop services, check prerequisites
-        return nil
-    },
-    AfterInstall: func() error {
-        // Start services, create shortcuts
-        return nil
-    },
-})
-```
-
-### Game Installer
-
-```go
-setupkit.Install(setupkit.Config{
-    AppName: "Amazing Game",
-    Version: "1.0.0",
-    Theme:   setupkit.ThemeDark,
-    
-    Components: []setupkit.Component{
-        {ID: "game", Name: "Game Files", Size: 10*setupkit.GB, Required: true},
-        {ID: "hd", Name: "HD Textures", Size: 5*setupkit.GB},
-        {ID: "soundtrack", Name: "Soundtrack", Size: 500*setupkit.MB},
-    },
-})
-```
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 setupkit/
-├── setupkit.go              # Main API entry point
+├── cmd/                         # Command-line tools
 ├── pkg/
-│   └── installer/           # Core installer logic
-│       ├── installer.go    # Framework implementation
-│       └── assets/          # Embedded UI (HTML/CSS/JS)
+│   ├── installer/
+│   │   ├── core/               # Core installation logic
+│   │   ├── controller/         # DFA-based flow controller + Custom States
+│   │   └── ui/                # UI implementations (CLI, GUI, Silent)
+│   ├── html/                  # HTML builder and SSR system
+│   └── wizard/                # DFA state machine implementation
 ├── examples/
-│   ├── minimal/            # Minimal example (50 lines)
-│   ├── branded/            # Corporate branding example
-│   └── simplest/           # Absolute minimum (5 lines)
-└── installer/              # Legacy components (being refactored)
+│   ├── installer-demo/        # Complete example installer
+│   └── custom-state-demo/     # Database configuration example
+└── bin/                       # Built binaries
 ```
 
-## Framework vs Library
+## 🛠️ Quick Start
 
-| Aspect | Traditional Approach | SetupKit Framework |
-|--------|---------------------|-------------------|
-| UI Code | You write 1000+ lines | Framework provides |
-| Build Process | Complex, multiple tools | Simple `go build` |
-| Output | Multiple files | Single .exe |
-| Dependencies | Node.js, npm, etc. | Just Go |
-| Learning Curve | New scripting language | Go configuration |
+### 1. Build the Examples
 
-## Requirements
+```bash
+# Build main installer demo
+make build                    # or: mage build
+go build -o bin/setupkit-installer-demo.exe ./examples/installer-demo
 
-- Go 1.18+ (for generics and embed)
-- Windows 7+ with WebView2 runtime
-- For development: Wails CLI (optional, auto-handled by mage/make)
+# Build custom state demo (database configuration)
+make build-custom-state-demo  # or: mage BuildCustomStateDemo
+go build -o bin/setupkit-custom-state-demo.exe ./examples/custom-state-demo
 
-## Documentation
+# Build all examples
+make build-all               # or: mage BuildAll
+```
 
-- [UI System](UI_SYSTEM.md) - Understanding the UI framework
-- [Examples](examples/README.md) - Complete working examples
-- [Contributing](CONTRIBUTING.md) - How to contribute
+### 2. Run Different Modes
 
-## Comparison with Other Tools
+```bash
+# Main installer demo
+./bin/setupkit-installer-demo.exe -mode=gui     # GUI Mode (opens browser)
+./bin/setupkit-installer-demo.exe -mode=cli     # CLI Mode (interactive terminal)
+./bin/setupkit-installer-demo.exe -profile=minimal -unattended -dir="./install"  # Silent Mode
 
-| Feature | SetupKit | InnoSetup | NSIS | WiX | Electron |
-|---------|----------|-----------|------|-----|----------|
-| Language | Go | Pascal Script | NSIS Script | XML | JavaScript |
-| Single Binary | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Cross-Platform | ✅ | ❌ | ❌ | ❌ | ✅ |
-| Native UI | ✅ | ✅ | ✅ | ✅ | ❌ |
-| File Size | ~10MB | ~5MB | ~3MB | ~5MB | ~100MB+ |
-| Learning Curve | Low | Medium | High | High | Medium |
-| **Unit Testing** | **✅ Native** | **❌ None** | **❌ None** | **❌ None** | ✅ Complex |
+# Custom state demo (database configuration)
+./bin/setupkit-custom-state-demo.exe --help              # Show all available options
+./bin/setupkit-custom-state-demo.exe -mode=silent        # Automated demo
+./bin/setupkit-custom-state-demo.exe -mode=cli           # Interactive CLI with DB config
+./bin/setupkit-custom-state-demo.exe -mode=auto          # Auto-select best UI mode
 
-## Roadmap
+# Using make/mage for custom state demo
+make run-custom-state-demo                       # or: mage RunCustomStateDemo (silent mode)
+make run-custom-state-demo-cli                   # or: mage RunCustomStateDemoCLI (CLI mode)
+make run-custom-state-demo-auto                  # or: mage RunCustomStateDemoAuto (auto mode)
+make help-custom-state-demo                      # or: mage HelpCustomStateDemo (show help)
 
-- [x] Core framework architecture
-- [x] Wails/WebView2 integration
-- [x] Component selection
-- [x] Progress tracking
-- [x] Theme system
-- [ ] Auto-update support
-- [ ] Digital signatures
-- [ ] Rollback support
-- [ ] macOS/Linux support
-- [ ] Cloud analytics
+# Using external config file to override embedded
+./bin/setupkit-installer-demo.exe -config=custom-installer.yml -mode=gui
 
-## Contributing
+# List available profiles
+./bin/setupkit-installer-demo.exe -list-profiles
+```
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+## 📝 Configuration
 
-## License
+Installation behavior is defined in `installer.yml`. The configuration is **embedded by default** and can be overridden with an external file:
 
-MIT License - see [LICENSE](LICENSE) file.
+```yaml
+app_name: "DemoApp"
+version: "1.0.0"
+publisher: "SetupKit Framework"
+mode: "auto"
+unattended: false
 
-## Support
+# Components to install
+components:
+  - id: "core"
+    name: "Core Application"
+    required: true
+    files: ["README.txt", "LICENSE.txt", "config.json"]
 
-- 🐛 [Report bugs](https://github.com/mmso2016/setupkit/setupkit/issues)
-- 💡 [Request features](https://github.com/mmso2016/setupkit/setupkit/issues)
-- 📖 [Read documentation](https://github.com/mmso2016/setupkit/setupkit/wiki)
-- ⭐ Star the project if you find it useful!
+# Installation profiles
+profiles:
+  minimal:
+    description: "Minimal installation"
+    components: ["core"]
+  full:
+    description: "Full installation"
+    components: ["core", "docs", "examples"]
+```
 
----
+## 🏗️ Architecture
 
-**SetupKit** - Modern installer framework for Go applications. Write configuration, ship professional installers.
+### MVC Pattern with DFA Controller
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   CLI View      │    │   GUI View      │    │  Silent View    │
+│                 │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         └───────────────────────┼───────────────────────┘
+                                 │
+         ┌───────────────────────────────────────────────┐
+         │          InstallerController                  │
+         │          (DFA-based Flow Control)             │
+         └───────────────────────────────────────────────┘
+                                 │
+         ┌───────────────────────────────────────────────┐
+         │             Core Installer                    │
+         │         (Business Logic & File Operations)    │
+         └───────────────────────────────────────────────┘
+```
+
+### Component Chain Implementation Status
+
+All installer modes implement the complete component chain as defined in design rules (Rule 15):
+
+**✅ Complete Chain**: `Welcome → License → Components → Install Path → Summary → Progress → Complete`
+
+| UI Mode | Welcome | License | Components | Install Path | Summary | Progress | Complete |
+|---------|---------|---------|------------|-------------|---------|----------|----------|
+| **Silent** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **CLI** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **GUI** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**All UI modes now fully implement the complete component chain with proper HTML rendering and HTTP API interaction.**
+
+### State Flow
+
+```
+Welcome → License → Components → Install Path → Summary → Progress → Complete
+   ↑         ↑          ↑            ↑            ↑          ↑         ↑
+   └─────────┴──────────┴────────────┴────────────┴──────────┴─────────┘
+                        (Back navigation supported)
+```
+
+## 🎯 Key Concepts
+
+### DFA Controller
+- **Single Source of Truth**: One controller manages the entire flow
+- **State Management**: Clear states with validation and transitions
+- **UI Agnostic**: Same logic works for all UI modes
+
+### View Interface
+All UI implementations must satisfy the `InstallerView` interface:
+```go
+type InstallerView interface {
+    ShowWelcome() error
+    ShowLicense(license string) (accepted bool, err error)
+    ShowComponents(components []core.Component) (selected []core.Component, err error)
+    ShowInstallPath(defaultPath string) (path string, err error)
+    ShowSummary(config *core.Config, selectedComponents []core.Component, installPath string) (proceed bool, err error)
+    ShowProgress(progress *core.Progress) error
+    ShowComplete(summary *core.InstallSummary) error
+    OnStateChanged(oldState, newState wizard.State) error
+}
+```
+
+## 🔧 Development
+
+### Build System
+- **Makefile**: Traditional make targets
+- **Magefile**: Go-based build automation
+- **Direct Go**: Standard go build commands
+
+### Available Targets
+```bash
+# Build all examples
+make build / mage build
+
+# Run tests
+make test / mage test
+
+# Run installer demo
+make run / mage run
+
+# Clean build artifacts
+make clean / mage clean
+```
+
+## 📚 Examples
+
+### Creating a Custom Installer
+
+1. **Define Configuration** (`installer.yml`)
+2. **Create Main Function** (see `examples/installer-demo/main.go`)
+3. **Set up DFA Controller**
+4. **Choose UI Mode**
+5. **Build and Deploy**
+
+### Unattended Installation
+
+```bash
+# Minimal profile, custom directory
+./installer -profile=minimal -unattended -dir="/opt/myapp"
+
+# Full profile, accept license automatically
+./installer -profile=full -unattended -accept-license
+```
+
+## 🏢 Enterprise Deployment Scenarios
+
+### Single-File Distribution
+```bash
+# Standard deployment - everything embedded
+MyApp-Installer.exe
+```
+- **Zero dependencies**: Complete installer in single executable
+- **Network deployment**: Easy distribution via file shares, email, or download
+- **Offline installation**: No internet connection required
+- **Virus scanner friendly**: Single file for security scanning
+
+### Mass Deployment with Configuration Override
+```bash
+# Corporate deployment with custom configuration
+MyApp-Installer.exe -config=corporate-config.yml -silent
+
+# Different environments
+MyApp-Installer.exe -config=development.yml -profile=developer
+MyApp-Installer.exe -config=production.yml -profile=minimal
+```
+
+### Unattended Enterprise Installation
+```bash
+# Silent installation for deployment tools (SCCM, Intune, etc.)
+MyApp-Installer.exe -silent -profile=minimal -dir="C:\Program Files\MyApp"
+
+# Batch deployment script
+for /f %%i in (computers.txt) do (
+    psexec \\%%i -c MyApp-Installer.exe -silent -unattended
+)
+```
+
+### Configuration Templates
+Create environment-specific YAML files for different deployment scenarios:
+
+**development.yml** - Developer workstations
+```yaml
+install_dir: "C:\Dev\MyApp"
+profiles:
+  developer:
+    components: ["core", "docs", "examples", "debug-tools"]
+    add_to_path: true
+    create_shortcuts: true
+```
+
+**production.yml** - Production servers
+```yaml
+mode: "silent"
+unattended: true
+install_dir: "C:\Program Files\MyApp"
+profiles:
+  minimal:
+    components: ["core"]
+    create_shortcuts: false
+```
+
+## 🔧 Custom States
+
+SetupKit supports **Custom States** for adding custom configuration steps to the installer flow.
+
+### Basic Usage
+
+```go
+// 1. Create a custom state handler
+type DatabaseConfigHandler struct {
+    *controller.BaseCustomStateHandler
+}
+
+func NewDatabaseConfigHandler() *DatabaseConfigHandler {
+    return &DatabaseConfigHandler{
+        BaseCustomStateHandler: &controller.BaseCustomStateHandler{
+            StateID:      controller.StateDBConfig,
+            Name:         "Database Configuration",
+            Description:  "Configure database connection settings",
+            InsertPoint:  controller.InsertAfterInstallPath,
+            CanGoNext:    true,
+            CanGoBack:    true,
+            CanCancel:    true,
+        },
+    }
+}
+
+// 2. Register with controller
+controller := controller.NewInstallerController(config, installer)
+dbHandler := controller.NewDatabaseConfigHandler()
+controller.RegisterCustomState(dbHandler)
+
+// 3. The flow becomes:
+// Welcome → License → Components → Install Path → [DB Config] → Summary → Complete
+```
+
+### Database Configuration Example
+
+The built-in database configuration example supports multiple database types:
+
+```bash
+# Run the database configuration demo in different modes
+./bin/setupkit-custom-state-demo.exe --help              # Show all options
+./bin/setupkit-custom-state-demo.exe -mode=silent        # Automated demo
+./bin/setupkit-custom-state-demo.exe -mode=cli           # Interactive CLI
+./bin/setupkit-custom-state-demo.exe -mode=auto          # Auto-select UI mode
+
+# Using make/mage shortcuts
+make run-custom-state-demo                       # Silent mode (automated)
+make run-custom-state-demo-cli                   # CLI mode (interactive)
+make help-custom-state-demo                      # Show all options
+
+# With custom directory
+./bin/setupkit-custom-state-demo.exe -mode=silent -dir="./my-install"
+```
+
+**Supported databases:**
+- MySQL
+- PostgreSQL
+- SQLite
+- SQL Server
+
+**Features:**
+- **Multiple UI modes**: Silent (automated), CLI (interactive), Auto (best selection)
+- **Flexible configuration**: Command-line parameters for all options
+- **Interactive CLI configuration**: Full user input with validation
+- **Automatic connection validation**: Tests database connectivity (skipped in demo mode)
+- **Connection string generation**: Supports all database types
+- **Silent mode with defaults**: Unattended installation with sensible defaults
+
+### Custom State Interface
+
+```go
+type CustomStateHandler interface {
+    GetStateID() wizard.State
+    GetConfig() *wizard.StateConfig
+    HandleEnter(*InstallerController, map[string]interface{}) error
+    HandleLeave(*InstallerController, map[string]interface{}) error
+    Validate(*InstallerController, map[string]interface{}) error
+    GetInsertionPoint() InsertionPoint
+}
+```
+
+### Insertion Points
+
+Insert custom states anywhere in the flow:
+
+```go
+var (
+    InsertAfterWelcome     = InsertionPoint{After: StateWelcome, Before: StateLicense}
+    InsertAfterLicense     = InsertionPoint{After: StateLicense, Before: StateComponents}
+    InsertAfterComponents  = InsertionPoint{After: StateComponents, Before: StateInstallPath}
+    InsertAfterInstallPath = InsertionPoint{After: StateInstallPath, Before: StateSummary}
+    InsertAfterSummary     = InsertionPoint{After: StateSummary, Before: StateProgress}
+)
+```
+
+### Use Cases
+
+- **Database Setup**: Connection configuration, schema initialization
+- **Service Configuration**: API keys, URLs, service endpoints
+- **User Management**: Admin account creation, permissions
+- **License Validation**: Enterprise license server verification
+- **Plugin Selection**: Extended component configuration
+
+### Testing
+
+```bash
+# Run custom state tests
+go test -v ./pkg/installer/controller -run TestCustomState
+
+# Run simple validation tests
+go test -v ./pkg/installer/controller -run TestCustomStateSimple
+```
+
+## 🌐 Cross-Platform Support
+
+- **Windows**: Native support with .exe binaries
+- **macOS**: Native support with proper app structure
+- **Linux**: Native support with standard directory layouts
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
+
+## 🤝 Contributing
+
+1. Follow the existing architecture patterns
+2. Ensure all UI modes work consistently
+3. Add tests for new functionality
+4. Update documentation
+
+## 🔗 Links
+
+- [API Reference](docs/API.md)
+- [Main Installer Example](examples/installer-demo/)
+- [Custom States Example](examples/custom-state-demo/)
+- [Package Documentation](pkg/)

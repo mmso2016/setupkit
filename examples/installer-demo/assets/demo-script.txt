@@ -1,0 +1,58 @@
+#!/usr/bin/env demoapp
+
+# DemoApp Demo Script
+# ===================
+# This script demonstrates key features of DemoApp
+
+print "Starting DemoApp demonstration..."
+
+# Initialize the application
+init_result = init()
+if not init_result:
+    print "ERROR: Failed to initialize DemoApp"
+    exit 1
+
+print "DemoApp initialized successfully"
+
+# Load sample configuration
+config = load_config("sample-config.txt")
+configure(config)
+print "Configuration loaded and applied"
+
+# Process sample data
+sample_data = [
+    {"id": 1, "name": "Item A", "value": 100},
+    {"id": 2, "name": "Item B", "value": 200},
+    {"id": 3, "name": "Item C", "value": 300}
+]
+
+print "Processing sample data..."
+result = process(sample_data)
+print "Processing complete. Results:", result
+
+# Export in different formats
+print "Exporting results..."
+
+json_export = export("json", result)
+save_file("output.json", json_export)
+print "JSON export saved to output.json"
+
+xml_export = export("xml", result)  
+save_file("output.xml", xml_export)
+print "XML export saved to output.xml"
+
+csv_export = export("csv", result)
+save_file("output.csv", csv_export)
+print "CSV export saved to output.csv"
+
+# Display system information
+system_info = getSystemInfo()
+print "System Information:"
+print "  Version:", getVersion()
+print "  Platform:", system_info.platform
+print "  Memory:", system_info.memory_mb, "MB"
+
+print "Demo script completed successfully!"
+print "Check the generated output files for results."
+
+# End of demo script
